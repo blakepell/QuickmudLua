@@ -4,11 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "merc.h"
-#include "timer.h"
 #include "lua_main.h"
 #include "lua_arclib.h"
 #include "interp.h"
-#include "mudconfig.h"
 
 void sorted_ctable_init( lua_State *LS );
 
@@ -104,8 +102,7 @@ static void infinite_loop_check_hook( lua_State *LS, lua_Debug *ar)
     }
 }
 
-
-
+#if 0
 void stackDump (lua_State *LS) {
     int i;
     int top = lua_gettop(LS);
@@ -133,6 +130,7 @@ void stackDump (lua_State *LS) {
     }
     logpf("\n");  /* end the listing */
 }
+#endif
 
 const char *check_string( lua_State *LS, int index, size_t size)
 {
@@ -212,7 +210,7 @@ int CallLuaWithTraceBack (lua_State *LS, const int iArguments, const int iReturn
 
     return error;
 }  /* end of CallLuaWithTraceBack  */
-
+#if 0
 DEF_DO_FUN(do_lboard)
 {
     lua_getglobal(g_mud_LS, "do_lboard");
@@ -661,17 +659,17 @@ DEF_DO_FUN(do_luai)
     lua_settop(g_mud_LS, 0);
     return;
 }
-
+#endif
 static int RegisterLuaRoutines (lua_State *LS)
 {
     time_t timer;
     time (&timer);
 
-    init_genrand (timer);
+    ///init_genrand (timer);
     type_init( LS );
 
     register_globals ( LS );
-    sorted_ctable_init( LS );
+    ///sorted_ctable_init( LS );
     register_LUAREFS( LS );
 
     return 0;
@@ -709,6 +707,7 @@ void open_lua ()
 
 }  /* end of open_lua */
 
+#if 0
 DEF_DO_FUN(do_scriptdump)
 {
     lua_getglobal(g_mud_LS, "do_scriptdump");
@@ -1473,7 +1472,7 @@ int name_sorted_group_table( int sequence )
 }
 
 /* end sorted ctable section */
-
+#endif
 /* LUAREF section */
 
 /* called as constructor */
@@ -1528,7 +1527,7 @@ bool is_set_ref( LUAREF ref )
 }
 
 /* end LUAREF section */
-
+#if 0
 /* string buffer section */
 
 BUFFER *new_buf()
@@ -1710,3 +1709,4 @@ void confirm_yes_no( DESCRIPTOR_DATA *d,
     }
     return;
 }
+#endif

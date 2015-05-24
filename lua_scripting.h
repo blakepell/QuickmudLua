@@ -45,7 +45,7 @@ void check_rprog( lua_State *LS, int vnum, const char *code );
 DECLARE_DO_FUN(do_lua);
 bool run_lua_interpret( DESCRIPTOR_DATA *d );
 void lua_unregister_desc( DESCRIPTOR_DATA *d );
-void run_delayed_function( TIMER_NODE *tmr );
+//void run_delayed_function( TIMER_NODE *tmr );
 void open_lua();
 bool run_lua_interpret( DESCRIPTOR_DATA *d);
 DECLARE_DO_FUN(do_luai);

@@ -92,6 +92,7 @@ http://www.gammon.com.au/forum/?id=8015
 /* TRIGTYPE_ARG */
 #define NUM_RPROG_RESULTS 1
 
+#if 0
 typedef struct lua_scripter
 {
     const char *name;
@@ -169,7 +170,8 @@ static bool lua_load_prog( lua_State *LS, int vnum, const char *code, LUA_SCRIPT
     }
 
 }
-
+#endif
+#if 0
 bool lua_load_mprog( lua_State *LS, int vnum, const char *code )
 {
     return lua_load_prog( LS, vnum, code, &mpscripter);
@@ -675,3 +677,4 @@ bool lua_room_program( const char *trigger, int pvnum, const char *source,
     }
     return result;
 }
+#endif

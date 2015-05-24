@@ -9,7 +9,7 @@ EXE = rom
 PROF = -O -g3
 
 C_FLAGS = $(PROF) -Wall
-L_FLAGS = $(PROF) -lcrypt
+L_FLAGS = $(PROF) -lcrypt -llua
 
 #IMC2 - Comment out to disable IMC2 support
 IMC = 1

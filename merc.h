@@ -24,7 +24,7 @@
  *    By using this code, you have agreed to follow the terms of the       *
  *    ROM license, in the file Rom24/doc/rom.license                       *
  ***************************************************************************/
-
+#include <lua.h>
 
 /*
  * Accommodate old non-Ansi compilers.
@@ -106,6 +106,8 @@ typedef struct    mprog_list       MPROG_LIST;
 typedef struct    mprog_code       MPROG_CODE;
 typedef struct    colour_data      COLOUR_DATA;
 
+typedef int LUAREF;
+
 /*
  * Function types.
  */
@@ -121,6 +123,7 @@ typedef void SPELL_FUN args( ( int sn, int level, CHAR_DATA *ch, void *vo,
  */
 #define MAX_KEY_HASH          1024
 #define MAX_STRING_LENGTH     4608
+#define MAX_SCRIPT_LENGTH     MAX_STRING_LENGTH * 10
 #define MAX_INPUT_LENGTH       256
 #define PAGELEN                 22
 
@@ -2314,18 +2317,21 @@ char *    crypt        args( ( const char *key, const char *salt ) );
  */
 #if defined(macintosh)
 #define PLAYER_DIR      ""                  /* Player files            */
+#define LUA_DIR         "../src/lua/"
 #define TEMP_FILE       "romtmp"
 #define NULL_FILE       "proto.are"         /* To reserve one stream   */
 #endif
 
 #if defined(MSDOS)
 #define PLAYER_DIR      ""                   /* Player files           */
+#define LUA_DIR         "../src/lua/"
 #define TEMP_FILE       "romtmp"
 #define NULL_FILE       "nul"                /* To reserve one stream  */
 #endif
 
 #if defined(unix)
 #define PLAYER_DIR      "../player/"         /* Player files           */
+#define LUA_DIR         "../src/lua/"
 #define GOD_DIR         "../gods/"           /* list of gods           */
 #define TEMP_FILE       "../player/romtmp"
 #define NULL_FILE       "/dev/null"          /* To reserve one stream  */
@@ -2338,6 +2344,7 @@ char *    crypt        args( ( const char *key, const char *salt ) );
 #define BAN_FILE        "ban.txt"
 #define MUSIC_FILE      "music.txt"
 #define OHELPS_FILE	    "orphaned_helps.txt"  /* Unmet 'help' requests */
+#define LUA_STARTUP     LUA_DIR "startup.lua"
 
 
 
@@ -2728,3 +2735,41 @@ extern        MOB_INDEX_DATA  *    mob_index_hash  [MAX_KEY_HASH];
 extern        OBJ_INDEX_DATA  *    obj_index_hash  [MAX_KEY_HASH];
 extern        ROOM_INDEX_DATA *    room_index_hash [MAX_KEY_HASH];
 
+
+/*
+ * Lua stuff (Nick Gammon)
+ */
+
+void open_lua  ();  /* set up Lua state */
+void close_lua (CHAR_DATA * ch);  /* close down Lua state, if it exists */
+
+bool valid_UD( void *ud );
+#define declf( ltype, ctype ) \
+ctype * check_ ## ltype ( lua_State *LS, int index ); \
+bool    is_ ## ltype ( lua_State *LS, int index ); \
+bool    push_ ## ltype ( lua_State *LS, ctype *ud );\
+ctype * alloc_ ## ltype (void) ;\
+void    free_ ## ltype ( ctype * ud );\
+bool    valid_ ## ltype ( ctype *ud );\
+int     count_ ## ltype ( void );
+
+declf(CH, CHAR_DATA)
+/*
+declf(OBJ, OBJ_DATA)
+declf(AREA, AREA_DATA)
+declf(ROOM, ROOM_INDEX_DATA)
+declf(EXIT, EXIT_DATA)
+declf(RESET, RESET_DATA)
+declf(MOBPROTO, MOB_INDEX_DATA)
+declf(OBJPROTO, OBJ_INDEX_DATA)
+declf(PROG, PROG_CODE)
+declf(MTRIG, PROG_LIST)
+declf(OTRIG, PROG_LIST)
+declf(ATRIG, PROG_LIST)
+declf(RTRIG, PROG_LIST)
+declf(SHOP, SHOP_DATA)
+declf(AFFECT, AFFECT_DATA)
+declf(HELP, HELP_DATA)
+declf(DESCRIPTOR, DESCRIPTOR_DATA)
+*/
+#undef declf

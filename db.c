@@ -323,6 +323,9 @@ void boot_db ()
         }
     }
 
+    log_string("Initializing Lua.");
+    open_lua();
+
     /*
      * Read in all the area files.
      */

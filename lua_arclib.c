@@ -8,8 +8,6 @@
 #include "lua_main.h"
 #include "olc.h"
 #include "tables.h"
-#include "mudconfig.h"
-#include "religion.h"
 #include "mob_cmds.h"
 #include "interp.h"
 
@@ -17,6 +15,7 @@
 LUA_OBJ_TYPE *type_list [] =
 {
     &CH_type,
+    /*
     &OBJ_type,
     &AREA_type,
     &ROOM_type,
@@ -33,8 +32,7 @@ LUA_OBJ_TYPE *type_list [] =
     &RTRIG_type,
     &HELP_type,
     &DESCRIPTOR_type,
-    &BOSSACHV_type,
-    &BOSSREC_type,
+    */
     NULL
 };
 
@@ -61,6 +59,9 @@ LUA_OBJ_TYPE *type_list [] =
 #define CHGET( field, sec ) GETP( CH, field, sec)
 #define CHSET( field, sec ) SETP( CH, field, sec)
 #define CHMETH( field, sec ) METH( CH, field, sec)
+
+
+#if 0
 
 #define OBJGET( field, sec ) GETP( OBJ, field, sec)
 #define OBJSET( field, sec ) SETP( OBJ, field, sec)
@@ -99,6 +100,8 @@ LUA_OBJ_TYPE *type_list [] =
 
 #define AFFGET( field, sec) GETP( AFFECT, field, sec)
 
+#endif
+
 typedef struct lua_prop_type
 {
     const char *field;
@@ -124,6 +127,7 @@ typedef struct glob_type
 
 struct glob_type glob_table[];
 
+#if 0
 static int utillib_func (lua_State *LS, const char *funcname)
 {
     int narg=lua_gettop(LS);
@@ -189,6 +193,10 @@ static int utillib_format_color_string( lua_State *LS )
     );
     return 1;
 }
+
+#endif
+
+#if 0
             
 static int godlib_helper_get_duration(lua_State* LS, int index)
 {
@@ -322,6 +330,9 @@ static int godlib_confuse (lua_State *LS)
     return 1;
 }
 
+#endif
+
+#if 0
 static int glob_transfer (lua_State *LS)
 {
     CHAR_DATA *ch=check_CH(LS,1);
@@ -741,6 +752,7 @@ static int glob_getluatype (lua_State *LS)
 
     return 1;
 }
+#endif
 
 static int glob_clearloopcount (lua_State *LS)
 {
@@ -748,6 +760,7 @@ static int glob_clearloopcount (lua_State *LS)
     return 0;
 }
 
+#if 0
 static int glob_log (lua_State *LS)
 {
     char buf[MSL];
@@ -919,7 +932,7 @@ static int glob_getobjlist (lua_State *LS)
 
     return 1;
 }
-
+#endif
 static int glob_getcharlist (lua_State *LS)
 {
     CHAR_DATA *ch;
@@ -954,6 +967,8 @@ static int glob_getmoblist (lua_State *LS)
 
     return 1;
 }
+
+#if 0
 
 static int glob_getdescriptorlist (lua_State *LS)
 {
@@ -1207,7 +1222,7 @@ static int glob_arguments ( lua_State *LS)
     return 1;
 }
         
-
+#endif
 
 #define ENDGTABLE { NULL, NULL, NULL, 0, 0 }
 #define GFUN( fun, sec ) { NULL, #fun , glob_ ## fun , sec, STS_ACTIVE }
@@ -1218,6 +1233,7 @@ static int glob_arguments ( lua_State *LS)
 
 GLOB_TYPE glob_table[] =
 {
+#if 0
     GFUN(hour,          0),
     GFUN(gettime,       0),
     GFUN(getroom,       0),
@@ -1294,6 +1310,7 @@ GLOB_TYPE glob_table[] =
 
     LFUN( mud, luadir,      SEC_NOSCRIPT ),
     LFUN( mud, userdir,     SEC_NOSCRIPT ),
+#endif
     
     ENDGTABLE
 };
@@ -1399,6 +1416,7 @@ void register_globals( lua_State *LS )
 /* end global section */
 
 /* common section */
+#if 0
 LUA_EXTRA_VAL *new_luaval( int type, const char *name, const char *val, bool persist )
 {
     LUA_EXTRA_VAL *new=alloc_mem(sizeof(LUA_EXTRA_VAL));
@@ -2201,10 +2219,11 @@ OBJVIF ( furnitureflag, ITEM_FURNITURE, 2, furniture_flags )
 OBJVIF ( weaponflag, ITEM_WEAPON, 4, weapon_type2 )
 
 OBJVIF ( containerflag, ITEM_CONTAINER, 1, container_flags )
-
+#endif
 /* end common section */
 
 /* CH section */
+#if 0
 static int CH_rvnum ( lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -4508,9 +4527,10 @@ static int CH_get_descriptor( lua_State *LS )
     else
         return 0;
 }
-
+#endif
 static const LUA_PROP_TYPE CH_get_table [] =
 {
+#if 0
     CHGET(name, 0),
     CHGET(level, 0),
     CHGET(hp, 0),
@@ -4596,11 +4616,13 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(ingame,0),
     CHGET(shortdescr, 0),
     CHGET(longdescr, 0),    
+#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE CH_set_table [] =
 {
+#if 0
     CHSET(name, 5),
     CHSET(level, 5),
     CHSET(hp, 5),
@@ -4642,11 +4664,13 @@ static const LUA_PROP_TYPE CH_set_table [] =
     CHSET(questpoints, SEC_NOSCRIPT),
     CHSET(ptitles, SEC_NOSCRIPT),
     CHSET(ptitle, SEC_NOSCRIPT),
+#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE CH_method_table [] =
 {
+#if 0
     CHMETH(mobhere, 0),
     CHMETH(objhere, 0),
     CHMETH(mobexists, 0),
@@ -4724,11 +4748,12 @@ static const LUA_PROP_TYPE CH_method_table [] =
     CHMETH(describe, 1),
     CHMETH(addaffect, 9),
     CHMETH(removeaffect,9),
+#endif
     ENDPTABLE
 }; 
 
 /* end CH section */
-
+#if 0
 /* OBJ section */
 static int OBJ_set_weapontype( lua_State *LS)
 {
@@ -7738,7 +7763,7 @@ static const LUA_PROP_TYPE BOSSREC_method_table [] =
     ENDPTABLE
 };
 /* end BOSSREC section */
-
+#endif
 void type_init( lua_State *LS)
 {
     int i;
@@ -8051,6 +8076,7 @@ LUA_OBJ_TYPE LTYPE ## _type = { \
 #define DECLARETRIG( LTYPE, CTYPE ) declb( LTYPE, CTYPE, TRIG ) 
 
 DECLARETYPE( CH, CHAR_DATA );
+/*
 DECLARETYPE( OBJ, OBJ_DATA );
 DECLARETYPE( AREA, AREA_DATA );
 DECLARETYPE( ROOM, ROOM_INDEX_DATA );
@@ -8071,3 +8097,4 @@ DECLARETYPE( HELP, HELP_DATA );
 DECLARETYPE( DESCRIPTOR, DESCRIPTOR_DATA );
 DECLARETYPE( BOSSACHV, BOSSACHV );
 DECLARETYPE( BOSSREC, BOSSREC );
+*/
