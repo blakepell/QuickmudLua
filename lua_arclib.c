@@ -1095,13 +1095,13 @@ static int mtlib_rand (lua_State *LS)
     lua_pushnumber (LS, (double)genrand ());
     return 1;
 } /* end of mtlib_rand */
-
+#endif
 static int mudlib_luadir( lua_State *LS)
 {
     lua_pushliteral( LS, LUA_DIR);
     return 1;
 }
-
+#if 0
 static int mudlib_userdir( lua_State *LS)
 {
     lua_pushliteral( LS, USER_DIR);
@@ -1307,10 +1307,9 @@ GLOB_TYPE glob_table[] =
 
     LFUN( mt, srand,        SEC_NOSCRIPT ),
     LFUN( mt, rand,         SEC_NOSCRIPT ),
-
-    LFUN( mud, luadir,      SEC_NOSCRIPT ),
-    LFUN( mud, userdir,     SEC_NOSCRIPT ),
 #endif
+    LFUN( mud, luadir,      SEC_NOSCRIPT ),
+    //LFUN( mud, userdir,     SEC_NOSCRIPT ),
     
     ENDGTABLE
 };

@@ -267,23 +267,13 @@ void free_obj (OBJ_DATA * obj)
 
 
 /* stuff for recyling characters */
-CHAR_DATA *char_free;
-
 CHAR_DATA *new_char (void)
 {
-    static CHAR_DATA ch_zero;
     CHAR_DATA *ch;
     int i;
 
-    if (char_free == NULL)
-        ch = alloc_perm (sizeof (*ch));
-    else
-    {
-        ch = char_free;
-        char_free = char_free->next;
-    }
+    ch = alloc_CH();
 
-    *ch = ch_zero;
     VALIDATE (ch);
     ch->name = &str_empty[0];
     ch->short_descr = &str_empty[0];
@@ -349,10 +339,9 @@ void free_char (CHAR_DATA * ch)
 #endif
     free_pcdata (ch->pcdata);
 
-    ch->next = char_free;
-    char_free = ch;
-
     INVALIDATE (ch);
+
+    free_CH( ch );
     return;
 }
 

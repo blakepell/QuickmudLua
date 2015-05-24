@@ -2,11 +2,6 @@ package.path = mud.luadir() .. "?.lua"
 
 glob_tprintstr=require "tprint"
 require "serialize"
-glob_util=require "utilities"
-require "leaderboard"
-require "commands"
-require "changelog"
-Queue = require "Queue"
 
 envtbl={} -- game object script environments
 interptbl={} -- key is game object pointer, table of desc=desc pointer, name=char name
