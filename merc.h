@@ -442,6 +442,12 @@ struct    descriptor_data
     void *      pEdit;         /* OLC */
     char **     pString;       /* OLC */
     int         editor;        /* OLC */
+    /* lua interpreter */
+    struct
+    {
+        bool interpret; /* Whether in lua interpreter mode */
+        bool incmpl;/* whether incomplete was detected */
+    } lua;
 };
 
 
@@ -2413,6 +2419,7 @@ void     act_new             args( ( const char *format, CHAR_DATA *ch,
                                      const void *arg1, const void *arg2, int type,
                                      int min_pos) );
 void     printf_to_char      args( ( CHAR_DATA *, char *, ... ) );
+#define ptc printf_to_char
 void     printf_to_desc      args( ( DESCRIPTOR_DATA *, char *, ... ) );
 void     bugf                args( ( char *, ... ) );
 bool     write_to_descriptor args( ( int desc, char *txt, int length ) );
@@ -2773,3 +2780,5 @@ declf(HELP, HELP_DATA)
 declf(DESCRIPTOR, DESCRIPTOR_DATA)
 */
 #undef declf
+
+bool   run_lua_interpret  args( ( DESCRIPTOR_DATA *d ) );

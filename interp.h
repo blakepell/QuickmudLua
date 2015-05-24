@@ -312,3 +312,4 @@ DECLARE_DO_FUN( do_oedit		);
 DECLARE_DO_FUN( do_mpedit		);
 DECLARE_DO_FUN( do_hedit		);
 DECLARE_DO_FUN( do_qmread		);
+DECLARE_DO_FUN( do_luai         );

@@ -637,7 +637,11 @@ void game_loop_mac_msdos (void)
                     switch (d->connected)
                     {
                         case CON_PLAYING:
-                            if (!run_olc_editor (d))
+                            if (run_lua_interpret(d))
+                                break;
+                            else if (run_olc_editor(d))
+                                break;
+                            else
                                 substitute_alias (d, d->incomm);
                             break;
                         default:
@@ -838,7 +842,11 @@ void game_loop_unix (int control)
                     switch (d->connected)
                     {
                         case CON_PLAYING:
-                            if (!run_olc_editor (d))
+                            if (run_lua_interpret(d))
+                                break;
+                            else if (run_olc_editor(d))
+                                break;
+                            else
                                 substitute_alias (d, d->incomm);
                             break;
                         default:
@@ -1317,8 +1325,16 @@ bool process_output (DESCRIPTOR_DATA * d, bool fPrompt)
     {
         if (d->showstr_point)
             write_to_buffer (d, "[Hit Return to continue]\n\r", 0);
-        else if (fPrompt && d->pString && d->connected == CON_PLAYING)
+        else if (fPrompt && (d->pString || d->lua.interpret) && d->connected == CON_PLAYING)
+        {
+            if (d->lua.interpret)
+            {
+                write_to_buffer( d, "lua", 3);
+                if (d->lua.incmpl)
+                    write_to_buffer( d, ">", 1 );
+            }
             write_to_buffer (d, "> ", 2);
+        }
         else if (fPrompt && d->connected == CON_PLAYING)
         {
             CHAR_DATA *ch;

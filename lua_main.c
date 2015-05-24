@@ -357,6 +357,8 @@ void load_mudconfig()
     }    
 }
 
+#endif
+
 bool run_lua_interpret( DESCRIPTOR_DATA *d)
 {
     if (!d->lua.interpret) /* not in interpreter */
@@ -485,7 +487,7 @@ void lua_unregister_desc (DESCRIPTOR_DATA *d)
     }
 }
 
-DEF_DO_FUN(do_luai)
+void do_luai( CHAR_DATA *ch, char *argument)
 {
     if IS_NPC(ch)
         return;
@@ -504,12 +506,13 @@ DEF_DO_FUN(do_luai)
     void *victim=NULL;
     LUA_OBJ_TYPE *type;
 
-    if ( arg1[0]== '\0' )
+    //if ( arg1[0]== '\0' )
     {
         victim=(void *)ch;
         type=&CH_type;
         name=ch->name;
     }
+#if 0
     else if (!strcmp( arg1, "mob") )
     {
         CHAR_DATA *mob;
@@ -577,6 +580,7 @@ DEF_DO_FUN(do_luai)
                 "luai room          -- open interpreter in env of current room\n\r"); 
         return;
     }
+#endif
 
     if (!ch->desc)
     {
@@ -659,7 +663,7 @@ DEF_DO_FUN(do_luai)
     lua_settop(g_mud_LS, 0);
     return;
 }
-#endif
+
 static int RegisterLuaRoutines (lua_State *LS)
 {
     time_t timer;

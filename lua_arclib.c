@@ -3077,7 +3077,7 @@ static int CH_uses (lua_State *LS)
 
     return 1;
 }
-
+#endif
 static int CH_say (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
@@ -3085,6 +3085,7 @@ static int CH_say (lua_State *LS)
     do_say( ud_ch, check_fstring( LS, 2, MIL) );
     return 0;
 }
+#if 0
 
 static int CH_describe (lua_State *LS)
 {
@@ -4692,7 +4693,9 @@ static const LUA_PROP_TYPE CH_method_table [] =
     CHMETH(canattack, 0),
     CHMETH(destroy, 1),
     CHMETH(oload, 1),
+#endif
     CHMETH(say, 1),
+#if 0
     CHMETH(emote, 1),
     CHMETH(mdo, 1),
     CHMETH(tell, 1),

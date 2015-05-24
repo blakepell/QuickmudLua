@@ -285,6 +285,7 @@ const struct cmd_type cmd_table[] = {
     /*
      * Immortal commands.
      */
+    {"luai",        do_luai,    POS_DEAD, ML, LOG_NORMAL, 1},
     {"advance",		do_advance,	POS_DEAD, ML, LOG_ALWAYS, 1},
     {"copyover",	do_copyover,	POS_DEAD, ML, LOG_ALWAYS, 1},
     {"dump",		do_dump,	POS_DEAD, ML, LOG_ALWAYS, 0},
