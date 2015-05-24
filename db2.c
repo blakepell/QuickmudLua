@@ -222,7 +222,7 @@ void load_mobiles (FILE * fp)
         }
         fBootDb = TRUE;
 
-        pMobIndex = alloc_perm (sizeof (*pMobIndex));
+        pMobIndex = alloc_MOBPROTO();
         pMobIndex->vnum = vnum;
         pMobIndex->area = area_last;    /* OLC */
         pMobIndex->new_format = TRUE;
@@ -411,7 +411,7 @@ void load_objects (FILE * fp)
         }
         fBootDb = TRUE;
 
-        pObjIndex = alloc_perm (sizeof (*pObjIndex));
+        pObjIndex = alloc_OBJPROTO();
         pObjIndex->vnum = vnum;
         pObjIndex->area = area_last;    /* OLC */
         pObjIndex->new_format = TRUE;
@@ -520,7 +520,7 @@ void load_objects (FILE * fp)
             {
                 AFFECT_DATA *paf;
 
-                paf = alloc_perm (sizeof (*paf));
+                paf = alloc_AFFECT();
                 paf->where = TO_OBJECT;
                 paf->type = -1;
                 paf->level = pObjIndex->level;
@@ -537,7 +537,7 @@ void load_objects (FILE * fp)
             {
                 AFFECT_DATA *paf;
 
-                paf = alloc_perm (sizeof (*paf));
+                paf = alloc_AFFECT();
                 letter = fread_letter (fp);
                 switch (letter)
                 {

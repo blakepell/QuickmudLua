@@ -2761,7 +2761,6 @@ bool    valid_ ## ltype ( ctype *ud );\
 int     count_ ## ltype ( void );
 
 declf(CH, CHAR_DATA)
-/*
 declf(OBJ, OBJ_DATA)
 declf(AREA, AREA_DATA)
 declf(ROOM, ROOM_INDEX_DATA)
@@ -2769,16 +2768,17 @@ declf(EXIT, EXIT_DATA)
 declf(RESET, RESET_DATA)
 declf(MOBPROTO, MOB_INDEX_DATA)
 declf(OBJPROTO, OBJ_INDEX_DATA)
+/*
 declf(PROG, PROG_CODE)
 declf(MTRIG, PROG_LIST)
 declf(OTRIG, PROG_LIST)
 declf(ATRIG, PROG_LIST)
 declf(RTRIG, PROG_LIST)
+*/
 declf(SHOP, SHOP_DATA)
 declf(AFFECT, AFFECT_DATA)
 declf(HELP, HELP_DATA)
 declf(DESCRIPTOR, DESCRIPTOR_DATA)
-*/
 #undef declf
 
 bool   run_lua_interpret  args( ( DESCRIPTOR_DATA *d ) );

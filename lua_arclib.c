@@ -916,7 +916,7 @@ static int glob_pagetochar (lua_State *LS)
 
     return 0;
 }
-
+#endif
 static int glob_getobjlist (lua_State *LS)
 {
     OBJ_DATA *obj;
@@ -932,7 +932,7 @@ static int glob_getobjlist (lua_State *LS)
 
     return 1;
 }
-#endif
+
 static int glob_getcharlist (lua_State *LS)
 {
     CHAR_DATA *ch;
@@ -1256,9 +1256,11 @@ GLOB_TYPE glob_table[] =
     GFUN(pagetochar,    0),
     GFUN( arguments,    0),
     GFUN(log,           0),
+#endif
     GFUN(getcharlist,   9),
     GFUN(getobjlist,    9),
     GFUN(getmoblist,    9),
+#if 0
     GFUN(getplayerlist, 9),
     GFUN(getarealist,   9),
     GFUN(getshoplist,   9),
@@ -3630,7 +3632,7 @@ static int CH_get_damnoun (lua_State *LS)
     lua_pushstring( LS, attack_table[ud_ch->dam_type].noun );
     return 1;
 }
-
+#endif
 static int CH_get_hp (lua_State *LS)
 {
     lua_pushinteger( LS,
@@ -3653,7 +3655,7 @@ static int CH_get_name (lua_State *LS)
             (check_CH(LS,1))->name );
     return 1;
 }
-
+#if 0
 static int CH_set_name (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH( LS, 1);
@@ -3664,14 +3666,14 @@ static int CH_set_name (lua_State *LS)
     ud_ch->name=str_dup(new);
     return 0;
 }
-
+#endif
 static int CH_get_level (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->level );
     return 1;
 }
-
+#if 0
 static int CH_set_level (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
@@ -3693,7 +3695,7 @@ static int CH_set_level (lua_State *LS)
     ud_ch->move = UMAX(0,mvpcnt*ud_ch->max_move);
     return 0;
 }
-
+#endif
 static int CH_get_maxhp (lua_State *LS)
 {
     lua_pushinteger( LS,
@@ -3701,6 +3703,7 @@ static int CH_get_maxhp (lua_State *LS)
     return 1;
 }
 
+#if 0
 static int CH_set_maxhp (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -3710,14 +3713,14 @@ static int CH_set_maxhp (lua_State *LS)
     ud_ch->max_hit = luaL_checkinteger( LS, 2);
     return 0;
 }
-
+#endif
 static int CH_get_mana (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->mana );
     return 1;
 }
-
+#if 0
 static int CH_set_mana (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH (LS, 1);
@@ -3726,14 +3729,14 @@ static int CH_set_mana (lua_State *LS)
     ud_ch->mana=num;
     return 0;
 }
-
+#endif
 static int CH_get_maxmana (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->max_mana );
     return 1;
 }
-
+#if 0
 static int CH_set_maxmana (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -3743,14 +3746,14 @@ static int CH_set_maxmana (lua_State *LS)
     ud_ch->max_mana = luaL_checkinteger( LS, 2);
     return 0;
 }
-
+#endif
 static int CH_get_move (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->move );
     return 1;
 }
-
+#if 0
 static int CH_set_move (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH (LS, 1);
@@ -3759,7 +3762,7 @@ static int CH_set_move (lua_State *LS)
     ud_ch->move=num;
     return 0;
 }
-
+#endif
 static int CH_get_maxmove (lua_State *LS)
 {
     lua_pushinteger( LS,
@@ -3767,6 +3770,7 @@ static int CH_get_maxmove (lua_State *LS)
     return 1;
 }
 
+#if 0
 static int CH_set_maxmove (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -4530,7 +4534,6 @@ static int CH_get_descriptor( lua_State *LS )
 #endif
 static const LUA_PROP_TYPE CH_get_table [] =
 {
-#if 0
     CHGET(name, 0),
     CHGET(level, 0),
     CHGET(hp, 0),
@@ -4539,6 +4542,7 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(maxmana, 0),
     CHGET(move, 0),
     CHGET(maxmove, 0),
+#if 0
     CHGET(gold, 0),
     CHGET(silver, 0),
     CHGET(money, 0),
@@ -5390,9 +5394,10 @@ static int OBJ_set_attacktype ( lua_State *LS)
 
     return 0;
 }
-
+#endif
 static const LUA_PROP_TYPE OBJ_get_table [] =
 {
+#if 0
     OBJGET(name, 0),
     OBJGET(shortdescr, 0),
     OBJGET(description, 0),
@@ -5487,11 +5492,13 @@ static const LUA_PROP_TYPE OBJ_get_table [] =
     OBJGET( silver, 0),
     OBJGET( gold, 0),
     
+#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE OBJ_set_table [] =
 {
+#if 0
     OBJSET(name, 5 ),
     OBJSET(shortdescr, 5),
     OBJSET(description, 5),
@@ -5503,6 +5510,7 @@ static const LUA_PROP_TYPE OBJ_set_table [] =
     OBJSET(carriedby, 5),
     OBJSET(attacktype, 5),
     OBJSET(weapontype, 9),
+#endif
        
     ENDPTABLE
 };
@@ -5510,6 +5518,7 @@ static const LUA_PROP_TYPE OBJ_set_table [] =
 
 static const LUA_PROP_TYPE OBJ_method_table [] =
 {
+#if 0
     OBJMETH(extra, 0),
     OBJMETH(wear, 0),
     OBJMETH(apply, 0),
@@ -5544,12 +5553,14 @@ static const LUA_PROP_TYPE OBJ_method_table [] =
     
     /* container only */
     OBJMETH(containerflag, 0),
+#endif
     
     ENDPTABLE
 }; 
 
 /* end OBJ section */
 
+#if 0
 /* AREA section */
 static int AREA_rvnum ( lua_State *LS)
 {
@@ -5983,9 +5994,10 @@ static int AREA_get_builders ( lua_State *LS)
             (check_AREA(LS,1))->builders);
     return 1;
 }
-
+#endif
 static const LUA_PROP_TYPE AREA_get_table [] =
 {
+#if 0
     AREAGET(name, 0),
     AREAGET(filename, 0),
     AREAGET(nplayer, 0),
@@ -6009,6 +6021,7 @@ static const LUA_PROP_TYPE AREA_get_table [] =
     AREAGET(aprogs, 0),
     AREAGET(rprogs, 0),
     AREAGET(atrigs, 0),
+#endif
     ENDPTABLE
 };
 
@@ -6019,6 +6032,7 @@ static const LUA_PROP_TYPE AREA_set_table [] =
 
 static const LUA_PROP_TYPE AREA_method_table [] =
 {
+#if 0
     AREAMETH(flag, 0),
     AREAMETH(echo, 1),
     AREAMETH(reset, 5),
@@ -6033,11 +6047,13 @@ static const LUA_PROP_TYPE AREA_method_table [] =
     AREAMETH(delay, 1),
     AREAMETH(cancel, 1),
     AREAMETH(rvnum, 1),
+#endif
     ENDPTABLE
 }; 
 
 /* end AREA section */
 
+#if 0
 /* ROOM section */
 static int ROOM_rvnum ( lua_State *LS)
 {
@@ -6435,9 +6451,10 @@ static int ROOM_get_rtrigs ( lua_State *LS)
     }
     return 1;
 }
-
+#endif
 static const LUA_PROP_TYPE ROOM_get_table [] =
 {
+#if 0
     ROOMGET(name, 0),
     ROOMGET(vnum, 0),
     ROOMGET(clan, 0),
@@ -6466,6 +6483,7 @@ static const LUA_PROP_TYPE ROOM_get_table [] =
     ROOMGET(down, 0),
     ROOMGET(resets, 0),
     ROOMGET(rtrigs, 0),
+#endif
     ENDPTABLE
 };
 
@@ -6476,6 +6494,7 @@ static const LUA_PROP_TYPE ROOM_set_table [] =
 
 static const LUA_PROP_TYPE ROOM_method_table [] =
 {
+#if 0
     ROOMMETH(flag, 0),
     ROOMMETH(reset, 5),
     ROOMMETH(purge, 5),
@@ -6492,11 +6511,13 @@ static const LUA_PROP_TYPE ROOM_method_table [] =
     ROOMMETH(savetbl, 1),
     ROOMMETH(loadtbl, 1),
     ROOMMETH(rvnum, 1),
+#endif
     ENDPTABLE
 }; 
 
 /* end ROOM section */
 
+#if 0
 /* EXIT section */
 static int EXIT_flag (lua_State *LS)
 {
@@ -6596,13 +6617,15 @@ static int EXIT_get_key (lua_State *LS)
             (check_EXIT(LS,1))->key);
     return 1;
 }
-
+#endif
 static const LUA_PROP_TYPE EXIT_get_table [] =
 {
+#if 0
     EXGET(toroom, 0),
     EXGET(keyword,0),
     EXGET(description, 0),
     EXGET(key, 0),
+#endif
     ENDPTABLE
 };
 
@@ -6613,17 +6636,20 @@ static const LUA_PROP_TYPE EXIT_set_table [] =
 
 static const LUA_PROP_TYPE EXIT_method_table [] =
 {
+#if 0
     EXMETH(flag, 0),
     EXMETH(setflag, 0),
     EXMETH(open, 0),
     EXMETH(close, 0),
     EXMETH(unlock, 0),
     EXMETH(lock, 0),
+#endif
     ENDPTABLE
 }; 
 
 /* end EXIT section */
 
+#if 0
 /* RESET section */
 static int RESET_get_command(lua_State *LS, RESET_DATA *rd )
 {
@@ -6644,14 +6670,16 @@ RESETGETARG(1);
 RESETGETARG(2);
 RESETGETARG(3);
 RESETGETARG(4);
-
+#endif
 static const LUA_PROP_TYPE RESET_get_table [] =
 {
+#if 0
     RSTGET( command, 0),
     RSTGET( arg1, 0),
     RSTGET( arg2, 0),
     RSTGET( arg3, 0),
     RSTGET( arg4, 0),
+#endif
     ENDPTABLE
 };
 
@@ -6667,6 +6695,7 @@ static const LUA_PROP_TYPE RESET_method_table [] =
 
 /* end RESET section */
 
+#if 0
 /* OBJPROTO section */
 static int OBJPROTO_adjustdamage( lua_State *LS)
 {
@@ -6836,9 +6865,10 @@ static int OBJPROTO_get_rating ( lua_State *LS)
 
     return 1;
 }
-
+#endif
 static const LUA_PROP_TYPE OBJPROTO_get_table [] =
 {
+#if 0
     OPGET( name, 0),
     OPGET( shortdescr, 0),
     OPGET( description, 0),
@@ -6927,6 +6957,7 @@ static const LUA_PROP_TYPE OBJPROTO_get_table [] =
     /* money */
     OPGET( silver, 0),
     OPGET( gold, 0),
+#endif
 
     ENDPTABLE
 };
@@ -6938,6 +6969,7 @@ static const LUA_PROP_TYPE OBJPROTO_set_table [] =
 
 static const LUA_PROP_TYPE OBJPROTO_method_table [] =
 {
+#if 0
     OPMETH( extra, 0),
     OPMETH( wear, 0),
     OPMETH( apply, 0),
@@ -6956,11 +6988,13 @@ static const LUA_PROP_TYPE OBJPROTO_method_table [] =
     /* container only */
     OPMETH(containerflag, 0),
     
+#endif
     ENDPTABLE
 }; 
 
 /* end OBJPROTO section */
 
+#if 0
 /* MOBPROTO section */
 static int MOBPROTO_affected (lua_State *LS)
 {
@@ -7101,9 +7135,11 @@ static int MOBPROTO_get_bossachv ( lua_State *LS)
     else
         return 0;
 }
-    
+
+#endif
 static const LUA_PROP_TYPE MOBPROTO_get_table [] =
 {
+#if 0
     MPGET( vnum, 0),
     MPGET( name, 0),
     MPGET( shortdescr, 0),
@@ -7132,6 +7168,7 @@ static const LUA_PROP_TYPE MOBPROTO_get_table [] =
     MPGET( shop, 0),
     MPGET( bossachv, 0),
     MPGET( count,0),
+#endif
     ENDPTABLE
 };
 
@@ -7142,17 +7179,20 @@ static const LUA_PROP_TYPE MOBPROTO_set_table [] =
 
 static const LUA_PROP_TYPE MOBPROTO_method_table [] =
 {
+#if 0
     MPMETH( act, 0),
     MPMETH( vuln, 0),
     MPMETH( immune, 0),
     MPMETH( offensive, 0),
     MPMETH( resist, 0),
     MPMETH( affected, 0),
+#endif
     ENDPTABLE
 }; 
 
 /* end MOBPROTO section */
 
+#if 0
 /* SHOP section */
 #define SHOPGETINT( lfield, cfield ) static int SHOP_get_ ## lfield ( lua_State *LS )\
 {\
@@ -7208,14 +7248,16 @@ static int SHOP_buytype ( lua_State *LS )
     return 1;
 }
        
-
+#endif
 static const LUA_PROP_TYPE SHOP_get_table [] =
 {
+#if 0
     SHOPGET( keeper, 0),
     SHOPGET( profitbuy, 0),
     SHOPGET( profitsell, 0),
     SHOPGET( openhour, 0),
     SHOPGET( closehour, 0),
+#endif
     ENDPTABLE
 };
 
@@ -7226,11 +7268,12 @@ static const LUA_PROP_TYPE SHOP_set_table [] =
 
 static const LUA_PROP_TYPE SHOP_method_table [] =
 {
-    SHOPMETH( buytype, 0), 
+    //SHOPMETH( buytype, 0), 
     ENDPTABLE
 };
 /* end SHOP section */
 
+#if 0
 /* AFFECT section */
 static int AFFECT_get_where ( lua_State *LS )
 {
@@ -7354,9 +7397,10 @@ static int AFFECT_get_tag ( lua_State *LS )
     return 1;
 }
 
-
+#endif
 static const LUA_PROP_TYPE AFFECT_get_table [] =
 {
+#if 0
     AFFGET( where, 0),
     AFFGET( type, 0),
     AFFGET( level, 0),
@@ -7366,6 +7410,7 @@ static const LUA_PROP_TYPE AFFECT_get_table [] =
     AFFGET( bitvector, 0),
     AFFGET( detectlevel, 0),
     AFFGET( tag, 0),
+#endif
     ENDPTABLE
 };
 
@@ -7382,6 +7427,7 @@ static const LUA_PROP_TYPE AFFECT_method_table [] =
 
 /* end AFFECT section */
 
+#if 0
 /* PROG section */
 static int PROG_get_islua ( lua_State *LS )
 {
@@ -7527,7 +7573,9 @@ static const LUA_PROP_TYPE TRIG_method_table [] =
 };
 
 /* end TRIG section */
+#endif
 
+#if 0
 /* HELP section */
 static int HELP_get_level( lua_State *LS )
 {
@@ -7553,12 +7601,15 @@ static int HELP_get_delete( lua_State *LS )
     return 1;
 }
 
+#endif
 static const LUA_PROP_TYPE HELP_get_table [] =
 {
+#if 0
     GETP( HELP, level, 0 ),
     GETP( HELP, keywords, 0 ),
     GETP( HELP, text, 0 ),
     GETP( HELP, delete, 0 ),
+#endif
     ENDPTABLE
 };
 
@@ -7574,6 +7625,7 @@ static const LUA_PROP_TYPE HELP_method_table [] =
 
 /* end HELP section */
 
+#if 0
 /* DESCRIPTOR section */
 static int DESCRIPTOR_get_character( lua_State *LS )
 {
@@ -7664,20 +7716,25 @@ static int DESCRIPTOR_set_conhandler( lua_State *LS )
     return 0;
 }
 
+#endif
 static const LUA_PROP_TYPE DESCRIPTOR_get_table [] =
 {
+#if 0
     GETP( DESCRIPTOR, character, 0 ),
     GETP( DESCRIPTOR, constate, SEC_NOSCRIPT ),
     GETP( DESCRIPTOR, inbuf, SEC_NOSCRIPT ),
     GETP( DESCRIPTOR, conhandler, SEC_NOSCRIPT ),
+#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE DESCRIPTOR_set_table [] =
 {
+#if 0
     SETP( DESCRIPTOR, constate, SEC_NOSCRIPT),
     SETP( DESCRIPTOR, inbuf, SEC_NOSCRIPT),
     SETP( DESCRIPTOR, conhandler, SEC_NOSCRIPT),
+#endif
     ENDPTABLE
 };
 
@@ -7687,6 +7744,7 @@ static const LUA_PROP_TYPE DESCRIPTOR_method_table [] =
 };
 /* end DESCRIPTOR section */
 
+#if 0
 /* BOSSACHV section */
 static int BOSSACHV_get_qp( lua_State *LS )
 {
@@ -8078,7 +8136,6 @@ LUA_OBJ_TYPE LTYPE ## _type = { \
 #define DECLARETRIG( LTYPE, CTYPE ) declb( LTYPE, CTYPE, TRIG ) 
 
 DECLARETYPE( CH, CHAR_DATA );
-/*
 DECLARETYPE( OBJ, OBJ_DATA );
 DECLARETYPE( AREA, AREA_DATA );
 DECLARETYPE( ROOM, ROOM_INDEX_DATA );
@@ -8088,15 +8145,17 @@ DECLARETYPE( OBJPROTO, OBJ_INDEX_DATA );
 DECLARETYPE( MOBPROTO, MOB_INDEX_DATA );
 DECLARETYPE( SHOP, SHOP_DATA );
 DECLARETYPE( AFFECT, AFFECT_DATA );
+/*
 DECLARETYPE( PROG, PROG_CODE );
 
 DECLARETRIG( MTRIG, PROG_LIST );
 DECLARETRIG( OTRIG, PROG_LIST );
 DECLARETRIG( ATRIG, PROG_LIST );
 DECLARETRIG( RTRIG, PROG_LIST );
-
+*/
 DECLARETYPE( HELP, HELP_DATA );
 DECLARETYPE( DESCRIPTOR, DESCRIPTOR_DATA );
+/*
 DECLARETYPE( BOSSACHV, BOSSACHV );
 DECLARETYPE( BOSSREC, BOSSREC );
 */

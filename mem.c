@@ -35,15 +35,7 @@ extern int top_ed;
 extern int top_room;
 extern int top_mprog_index;
 
-AREA_DATA *area_free;
 EXTRA_DESCR_DATA *extra_descr_free;
-EXIT_DATA *exit_free;
-ROOM_INDEX_DATA *room_index_free;
-OBJ_INDEX_DATA *obj_index_free;
-SHOP_DATA *shop_free;
-MOB_INDEX_DATA *mob_index_free;
-RESET_DATA *reset_free;
-HELP_DATA *help_free;
 
 HELP_DATA *help_last;
 
@@ -56,16 +48,8 @@ RESET_DATA *new_reset_data (void)
 {
     RESET_DATA *pReset;
 
-    if (!reset_free)
-    {
-        pReset = alloc_perm (sizeof (*pReset));
-        top_reset++;
-    }
-    else
-    {
-        pReset = reset_free;
-        reset_free = reset_free->next;
-    }
+    pReset=alloc_RESET();
+    top_reset++;
 
     pReset->next = NULL;
     pReset->command = 'X';
@@ -81,8 +65,9 @@ RESET_DATA *new_reset_data (void)
 
 void free_reset_data (RESET_DATA * pReset)
 {
-    pReset->next = reset_free;
-    reset_free = pReset;
+    pReset->next = NULL;
+    free_RESET( pReset );
+    top_reset--;
     return;
 }
 
@@ -93,16 +78,8 @@ AREA_DATA *new_area (void)
     AREA_DATA *pArea;
     char buf[MAX_INPUT_LENGTH];
 
-    if (!area_free)
-    {
-        pArea = alloc_perm (sizeof (*pArea));
-        top_area++;
-    }
-    else
-    {
-        pArea = area_free;
-        area_free = area_free->next;
-    }
+    pArea = alloc_AREA();
+    top_area++;
 
     pArea->next = NULL;
     pArea->name = str_dup ("New area");
@@ -131,8 +108,8 @@ void free_area (AREA_DATA * pArea)
     free_string (pArea->builders);
     free_string (pArea->credits);
 
-    pArea->next = area_free->next;
-    area_free = pArea;
+    pArea->next = NULL;
+    free_AREA( pArea );
     return;
 }
 
@@ -142,16 +119,8 @@ EXIT_DATA *new_exit (void)
 {
     EXIT_DATA *pExit;
 
-    if (!exit_free)
-    {
-        pExit = alloc_perm (sizeof (*pExit));
-        top_exit++;
-    }
-    else
-    {
-        pExit = exit_free;
-        exit_free = exit_free->next;
-    }
+    pExit = alloc_EXIT();
+    top_exit++;
 
     pExit->u1.to_room = NULL;    /* ROM OLC */
     pExit->next = NULL;
@@ -172,8 +141,8 @@ void free_exit (EXIT_DATA * pExit)
     free_string (pExit->keyword);
     free_string (pExit->description);
 
-    pExit->next = exit_free;
-    exit_free = pExit;
+    pExit->next = NULL;
+    free_EXIT( pExit );
     return;
 }
 
@@ -183,16 +152,8 @@ ROOM_INDEX_DATA *new_room_index (void)
     ROOM_INDEX_DATA *pRoom;
     int door;
 
-    if (!room_index_free)
-    {
-        pRoom = alloc_perm (sizeof (*pRoom));
-        top_room++;
-    }
-    else
-    {
-        pRoom = room_index_free;
-        room_index_free = room_index_free->next;
-    }
+    pRoom = alloc_ROOM();
+    top_room++;
 
     pRoom->next = NULL;
     pRoom->people = NULL;
@@ -245,8 +206,8 @@ void free_room_index (ROOM_INDEX_DATA * pRoom)
         free_reset_data (pReset);
     }
 
-    pRoom->next = room_index_free;
-    room_index_free = pRoom;
+    pRoom->next = NULL;
+    free_ROOM( pRoom );
     return;
 }
 
@@ -258,16 +219,8 @@ SHOP_DATA *new_shop (void)
     SHOP_DATA *pShop;
     int buy;
 
-    if (!shop_free)
-    {
-        pShop = alloc_perm (sizeof (*pShop));
-        top_shop++;
-    }
-    else
-    {
-        pShop = shop_free;
-        shop_free = shop_free->next;
-    }
+    pShop = alloc_SHOP();
+    top_shop++;
 
     pShop->next = NULL;
     pShop->keeper = 0;
@@ -287,8 +240,8 @@ SHOP_DATA *new_shop (void)
 
 void free_shop (SHOP_DATA * pShop)
 {
-    pShop->next = shop_free;
-    shop_free = pShop;
+    pShop->next = NULL;
+    free_SHOP( pShop );
     return;
 }
 
@@ -299,16 +252,8 @@ OBJ_INDEX_DATA *new_obj_index (void)
     OBJ_INDEX_DATA *pObj;
     int value;
 
-    if (!obj_index_free)
-    {
-        pObj = alloc_perm (sizeof (*pObj));
-        top_obj_index++;
-    }
-    else
-    {
-        pObj = obj_index_free;
-        obj_index_free = obj_index_free->next;
-    }
+    pObj = alloc_OBJPROTO();
+    top_obj_index++;
 
     pObj->next = NULL;
     pObj->extra_descr = NULL;
@@ -355,8 +300,8 @@ void free_obj_index (OBJ_INDEX_DATA * pObj)
         free_extra_descr (pExtra);
     }
 
-    pObj->next = obj_index_free;
-    obj_index_free = pObj;
+    pObj->next = NULL;
+    free_OBJPROTO( pObj );
     return;
 }
 
@@ -366,16 +311,8 @@ MOB_INDEX_DATA *new_mob_index (void)
 {
     MOB_INDEX_DATA *pMob;
 
-    if (!mob_index_free)
-    {
-        pMob = alloc_perm (sizeof (*pMob));
-        top_mob_index++;
-    }
-    else
-    {
-        pMob = mob_index_free;
-        mob_index_free = mob_index_free->next;
-    }
+    pMob = alloc_MOBPROTO();
+    top_mob_index++;
 
     pMob->next = NULL;
     pMob->spec_fun = NULL;
@@ -437,8 +374,8 @@ void free_mob_index (MOB_INDEX_DATA * pMob)
 
     free_shop (pMob->pShop);
 
-    pMob->next = mob_index_free;
-    mob_index_free = pMob;
+    pMob->next = NULL;
+    free_MOBPROTO( pMob );
     return;
 }
 

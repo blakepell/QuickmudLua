@@ -73,23 +73,12 @@ void free_ban (BAN_DATA * ban)
     ban_free = ban;
 }
 
-/* stuff for recycling descriptors */
-DESCRIPTOR_DATA *descriptor_free;
-
 DESCRIPTOR_DATA *new_descriptor (void)
 {
-    static DESCRIPTOR_DATA d_zero;
     DESCRIPTOR_DATA *d;
 
-    if (descriptor_free == NULL)
-        d = alloc_perm (sizeof (*d));
-    else
-    {
-        d = descriptor_free;
-        descriptor_free = descriptor_free->next;
-    }
+    d = alloc_DESCRIPTOR();
 
-    *d = d_zero;
     VALIDATE (d);
 
     d->connected = CON_GET_NAME;
@@ -109,8 +98,8 @@ void free_descriptor (DESCRIPTOR_DATA * d)
     free_string (d->host);
     free_mem (d->outbuf, d->outsize);
     INVALIDATE (d);
-    d->next = descriptor_free;
-    descriptor_free = d;
+    d->next = NULL;
+    free_DESCRIPTOR( d );
 }
 
 /* stuff for recycling gen_data */
@@ -180,22 +169,11 @@ void free_extra_descr (EXTRA_DESCR_DATA * ed)
 
 
 /* stuff for recycling affects */
-AFFECT_DATA *affect_free;
-
 AFFECT_DATA *new_affect (void)
 {
-    static AFFECT_DATA af_zero;
     AFFECT_DATA *af;
 
-    if (affect_free == NULL)
-        af = alloc_perm (sizeof (*af));
-    else
-    {
-        af = affect_free;
-        affect_free = affect_free->next;
-    }
-
-    *af = af_zero;
+    af = alloc_AFFECT();
 
 
     VALIDATE (af);
@@ -208,26 +186,16 @@ void free_affect (AFFECT_DATA * af)
         return;
 
     INVALIDATE (af);
-    af->next = affect_free;
-    affect_free = af;
+    af->next = NULL;
+    free_AFFECT(af);
 }
 
-/* stuff for recycling objects */
-OBJ_DATA *obj_free;
 
 OBJ_DATA *new_obj (void)
 {
-    static OBJ_DATA obj_zero;
     OBJ_DATA *obj;
-
-    if (obj_free == NULL)
-        obj = alloc_perm (sizeof (*obj));
-    else
-    {
-        obj = obj_free;
-        obj_free = obj_free->next;
-    }
-    *obj = obj_zero;
+    
+    obj=alloc_OBJ();
     VALIDATE (obj);
 
     return obj;
@@ -261,12 +229,11 @@ void free_obj (OBJ_DATA * obj)
     free_string (obj->owner);
     INVALIDATE (obj);
 
-    obj->next = obj_free;
-    obj_free = obj;
+    obj->next = NULL;
+    free_OBJ( obj );
 }
 
 
-/* stuff for recyling characters */
 CHAR_DATA *new_char (void)
 {
     CHAR_DATA *ch;
@@ -657,19 +624,11 @@ HELP_AREA *new_had (void)
     return had;
 }
 
-HELP_DATA *help_free;
-
 HELP_DATA *new_help (void)
 {
     HELP_DATA *help;
 
-    if (help_free)
-    {
-        help = help_free;
-        help_free = help_free->next;
-    }
-    else
-        help = alloc_perm (sizeof (*help));
+    help = alloc_HELP();
 
     return help;
 }
@@ -678,6 +637,6 @@ void free_help (HELP_DATA * help)
 {
     free_string (help->keyword);
     free_string (help->text);
-    help->next = help_free;
-    help_free = help;
+    help->next = NULL;
+    free_HELP(help);
 }

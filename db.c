@@ -65,10 +65,7 @@ time_t time (time_t * tloc);
 
 
 /* externals for counting purposes */
-extern OBJ_DATA *obj_free;
-extern DESCRIPTOR_DATA *descriptor_free;
 extern PC_DATA *pcdata_free;
-extern AFFECT_DATA *affect_free;
 
 /*
  * Globals.
@@ -444,7 +441,7 @@ void load_area (FILE * fp)
 {
     AREA_DATA *pArea;
 
-    pArea = alloc_perm (sizeof (*pArea));
+    pArea = alloc_AREA();
     pArea->file_name = fread_string (fp);
 
 	/* Pretty up the log a little */
@@ -523,7 +520,7 @@ void new_load_area (FILE * fp)
     char *word;
     bool fMatch;
 
-    pArea = alloc_perm (sizeof (*pArea));
+    pArea = alloc_AREA();
     pArea->age = 15;
     pArea->nplayer = 0;
     pArea->file_name = str_dup (strArea);
@@ -714,7 +711,7 @@ void load_old_mob (FILE * fp)
         }
         fBootDb = TRUE;
 
-        pMobIndex = alloc_perm (sizeof (*pMobIndex));
+        pMobIndex = alloc_MOBPROTO();
         pMobIndex->vnum = vnum;
         pMobIndex->area = area_last;    /* OLC */
         pMobIndex->new_format = FALSE;
@@ -858,7 +855,7 @@ void load_old_obj (FILE * fp)
         }
         fBootDb = TRUE;
 
-        pObjIndex = alloc_perm (sizeof (*pObjIndex));
+        pObjIndex = alloc_OBJPROTO();
         pObjIndex->vnum = vnum;
         pObjIndex->area = area_last;    /* OLC */
         pObjIndex->new_format = FALSE;
@@ -905,7 +902,7 @@ void load_old_obj (FILE * fp)
             {
                 AFFECT_DATA *paf;
 
-                paf = alloc_perm (sizeof (*paf));
+                paf = alloc_AFFECT();
                 paf->where = TO_OBJECT;
                 paf->type = -1;
                 paf->level = 20;    /* RT temp fix */
@@ -1148,7 +1145,7 @@ void load_rooms (FILE * fp)
         }
         fBootDb = TRUE;
 
-        pRoomIndex = alloc_perm (sizeof (*pRoomIndex));
+        pRoomIndex = alloc_ROOM();
         pRoomIndex->owner = str_dup ("");
         pRoomIndex->people = NULL;
         pRoomIndex->contents = NULL;
@@ -1207,7 +1204,7 @@ void load_rooms (FILE * fp)
                     exit (1);
                 }
 
-                pexit = alloc_perm (sizeof (*pexit));
+                pexit = alloc_EXIT();
                 pexit->description = fread_string (fp);
                 pexit->keyword = fread_string (fp);
                 pexit->exit_info = 0;
@@ -1297,7 +1294,7 @@ void load_shops (FILE * fp)
         MOB_INDEX_DATA *pMobIndex;
         int iTrade;
 
-        pShop = alloc_perm (sizeof (*pShop));
+        pShop = alloc_SHOP();
         pShop->keeper = fread_number (fp);
         if (pShop->keeper == 0)
             break;
@@ -3374,8 +3371,8 @@ void do_dump (CHAR_DATA * ch, char *argument)
     count2 = 0;
     for (d = descriptor_list; d != NULL; d = d->next)
         count++;
-    for (d = descriptor_free; d != NULL; d = d->next)
-        count2++;
+    ///for (d = descriptor_free; d != NULL; d = d->next)
+        ///count2++;
 
     fprintf (fp, "Descs    %4d (%8d bytes), %2d free (%d bytes)\n",
              count, count * (sizeof (*d)), count2, count2 * (sizeof (*d)));
@@ -3402,8 +3399,8 @@ void do_dump (CHAR_DATA * ch, char *argument)
         for (af = obj->affected; af != NULL; af = af->next)
             aff_count++;
     }
-    for (obj = obj_free; obj != NULL; obj = obj->next)
-        count2++;
+    //for (obj = obj_free; obj != NULL; obj = obj->next)
+    //    count2++;
 
     fprintf (fp, "Objs    %4d (%8d bytes), %2d free (%d bytes)\n",
              count, count * (sizeof (*obj)), count2,
@@ -3411,8 +3408,8 @@ void do_dump (CHAR_DATA * ch, char *argument)
 
     /* affects */
     count = 0;
-    for (af = affect_free; af != NULL; af = af->next)
-        count++;
+    ///for (af = affect_free; af != NULL; af = af->next)
+        ///count++;
 
     fprintf (fp, "Affects    %4d (%8d bytes), %2d free (%d bytes)\n",
              aff_count, aff_count * (sizeof (*af)), count,
