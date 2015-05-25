@@ -5174,7 +5174,6 @@ static const LUA_PROP_TYPE EXIT_method_table [] =
 
 /* end EXIT section */
 
-#if 0
 /* RESET section */
 static int RESET_get_command(lua_State *LS, RESET_DATA *rd )
 {
@@ -5195,16 +5194,14 @@ RESETGETARG(1);
 RESETGETARG(2);
 RESETGETARG(3);
 RESETGETARG(4);
-#endif
+
 static const LUA_PROP_TYPE RESET_get_table [] =
 {
-#if 0
     RSTGET( command, 0),
     RSTGET( arg1, 0),
     RSTGET( arg2, 0),
     RSTGET( arg3, 0),
     RSTGET( arg4, 0),
-#endif
     ENDPTABLE
 };
 
