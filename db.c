@@ -1536,7 +1536,36 @@ void load_mobprogs (FILE * fp)
 
         pMprog = alloc_MPROG();
         pMprog->vnum = vnum;
-        pMprog->code = fread_string (fp);
+        pMprog->is_lua = FALSE;
+
+        const char *word;
+        for ( ; ; )
+        {
+            word=fread_word(fp);
+
+            if (!strcmp(word, "LUA" ))
+            {
+                pMprog->is_lua=fread_number(fp);
+            }
+            else if (!strcmp(word, "SEC"))
+            {
+                pMprog->security=fread_number(fp);
+            }
+            else if (!strcmp(word, "CODE"))
+            {
+                pMprog->code=fread_string(fp);
+            }
+            else if (!strcmp(word, "End"))
+            {
+                break;
+            }
+            else
+            {
+                bugf("Unrecognized word in load_mobprogs: %s", word);
+                exit(1);
+            }
+        }
+
         if (mprog_list == NULL)
             mprog_list = pMprog;
         else

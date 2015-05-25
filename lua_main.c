@@ -1053,7 +1053,7 @@ DEF_DO_FUN(do_luaconfig)
         lua_pop( g_mud_LS, 1);
     }
 }
-
+#endif
 static int L_dump_prog( lua_State *LS)
 {
     // 1 is ch
@@ -1078,10 +1078,9 @@ static int L_dump_prog( lua_State *LS)
     }
     lua_pushstring(LS, "\n\r");
     lua_concat( LS, 2);
-    page_to_char_new( 
+    page_to_char( 
             luaL_checkstring(LS, 2),
-            check_CH(LS, 1),
-            TRUE);
+            check_CH(LS, 1) );
 
     return 0;
 }
@@ -1101,6 +1100,7 @@ void dump_prog( CHAR_DATA *ch, const char *prog, bool numberlines)
     }
 }
 
+#if 0
 DEF_DO_FUN(do_luareset)
 {
     lua_getglobal(g_mud_LS, "do_luareset");

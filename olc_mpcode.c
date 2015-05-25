@@ -15,6 +15,7 @@
 #include "tables.h"
 #include "olc.h"
 #include "recycle.h"
+#include "lua_main.h"
 
 #define MPEDIT( fun )           bool fun(CHAR_DATA *ch, char*argument)
 
@@ -27,6 +28,8 @@ const struct olc_cmd_type mpedit_table[] = {
     {"code", mpedit_code},
     {"show", mpedit_show},
     {"list", mpedit_list},
+    {"lua", mpedit_lua},
+    {"security", mpedit_security},
     {"?", show_help},
 
     {NULL, 0}
@@ -204,12 +207,74 @@ MPEDIT (mpedit_show)
 
     sprintf (buf,
              "Vnum:       [%d]\n\r"
-             "Code:\n\r%s\n\r", pMcode->vnum, pMcode->code);
+             "Lua:        %s\n\r"
+             "Security:   %d\n\r"
+             "Code:\n\r", 
+             pMcode->vnum, 
+             pMcode->is_lua ? "True" : "False",
+             pMcode->security);
     send_to_char (buf, ch);
+
+    if (pMcode->is_lua)
+        dump_prog(ch, pMcode->code, TRUE);
+    else
+        page_to_char( pMcode->code, ch);
 
     return FALSE;
 }
 
+MPEDIT(mpedit_security)
+{
+    MPROG_CODE *pMcode;
+    EDIT_MPCODE(ch, pMcode);
+    int newsec;
+
+    if ( argument[0] == '\0' )
+    {
+        newsec=ch->pcdata->security;
+    }
+    else
+    {
+        if (is_number(argument))
+        {
+            newsec=atoi(argument);
+        }
+        else
+        {
+            ptc(ch, "Bad argument: . Must be a number.\n\r", argument);
+            return FALSE;
+        }
+    }
+
+    if (newsec == pMcode->security)
+    {
+        ptc(ch, "Security is already at %d.\n\r", newsec );
+        return FALSE;
+    }
+    else if (newsec > ch->pcdata->security )
+    {
+        ptc(ch, "Your security %d doesn't allow you to set security %d.\n\r",
+                ch->pcdata->security, newsec);
+        return FALSE;
+    }
+
+    pMcode->security=newsec;
+    ptc(ch, "Security for %d updated to %d.\n\r",
+            pMcode->vnum, pMcode->security);
+    return TRUE;
+}
+
+MPEDIT(mpedit_lua)
+{
+    MPROG_CODE *pMcode;
+    EDIT_MPCODE(ch, pMcode);
+
+    pMcode->is_lua = !pMcode->is_lua;
+    ptc( ch, "LUA set to %s\n\r", pMcode->is_lua ? "TRUE" : "FALSE" );
+
+    ///fix_mprog_mobs( ch, pMcode);
+    return TRUE;
+}
 MPEDIT (mpedit_code)
 {
     MPROG_CODE *pMcode;

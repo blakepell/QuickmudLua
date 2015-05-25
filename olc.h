@@ -266,6 +266,8 @@ DECLARE_OLC_FUN( medit_delmprog		);  /* ROM */
 /* Mobprog editor */
 DECLARE_OLC_FUN( mpedit_create		);
 DECLARE_OLC_FUN( mpedit_code		);
+DECLARE_OLC_FUN( mpedit_lua         );
+DECLARE_OLC_FUN( mpedit_security    );
 DECLARE_OLC_FUN( mpedit_show		);
 DECLARE_OLC_FUN( mpedit_list		);
 

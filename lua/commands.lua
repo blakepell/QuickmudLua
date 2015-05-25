@@ -794,124 +794,7 @@ end
 -- end luaquery section
 
 -- luaconfig section
-local syn_cfg_tbl=
-{
-    "keywords",
-    "boolean",
-    "nil",
-    "function",
-    "operator",
-    "global",
-    "comment",
-    "string",
-    "number"
-}
-
-configs_table = configs_table or {}
-
-local function show_luaconfig_usage( ch )
-    pagetochar( ch,
-[[
-
-luaconfig list
-luaconfig <name> <color char>
-
-]])
-
-end
-
-local xtermcols=
-{
-    "r",
-    "R",
-    "g",
-    "G",
-    "y",
-    "Y",
-    "b",
-    "B",
-    "m",
-    "M",
-    "c",
-    "C",
-    "w",
-    "W",
-    "a",
-    "A",
-    "j",
-    "J",
-    "l",
-    "L",
-    "o",
-    "O",
-    "p",
-    "P",
-    "t",
-    "T",
-    "v",
-    "V"
-}
-function do_luaconfig( ch, argument )
-    local args=arguments(argument, true)
-
-    if not(args[1]) then
-        show_luaconfig_usage( ch )
-        return
-    end
-
-    local cfg=configs_table[ch] -- maybe nil
-
-    if (args[1] == "list") then
-        sendtochar(ch,
-                string.format("%-15s %s\n\r",
-                    "Setting Name",
-                    "Your setting") )
-
-        for k,v in pairs(syn_cfg_tbl) do
-            local char=cfg and cfg[v]
-
-            sendtochar(ch,
-                    string.format("%-15s %s\n\r",
-                        v,
-                        ( (char and ("\t"..char..char.."\tn")) or "") ) )
-        end
-
-        sendtochar( ch, "\n\rSupported colors:\n\r")
-        for k,v in pairs(xtermcols) do
-            sendtochar( ch, "\t"..v..v.." ")
-        end
-        sendtochar( ch, "\tn\n\r")
-        return
-    end
-
-    for k,v in pairs(syn_cfg_tbl) do
-        if (args[1]==v) then
-            configs_table[ch]=configs_table[ch] or {}
-            if not(args[2]) then
-                configs_table[ch][v]=nil
-                sendtochar( ch, "Config cleared for "..v.."\n\r")
-                return
-            end
-
-            for l,w in pairs(xtermcols) do
-                if w==args[2] then
-                    configs_table[ch][v]=w
-                    sendtochar( ch, "Config for "..v.." set to \t"..w..w.."\tn\n\r")
-                    return
-                end
-            end
-            
-            sendtochar(ch, "Invalid argument: "..args[2].."\n\r")    
-            return
-        end
-    end
-
-    show_luaconfig_usage( ch )
-
-end
-
-function colorize( text, ch )
-    config=(ch and configs_table[ch]) or {}
+function colorize( text )
     local rtn={}
     local len=#text
     local i=0
@@ -929,48 +812,50 @@ function colorize( text, ch )
                 and waitfor==char 
                 then
                 waitfor=nil
-                table.insert(rtn,"\tn"..char)
+                table.insert(rtn,"{x"..char)
             elseif waitfor==']]' 
                 and waitfor==text:sub(i,i+1) 
                 then
-                table.insert(rtn,"]]\tn")
+                table.insert(rtn,"]]{x")
                 waitfor=nil
                 i=i+1
             elseif waitfor=='--]]'
                 and waitfor==text:sub(i,i+3)
                 then
-                table.insert(rtn,"--]]\tn")
+                table.insert(rtn,"--]]{x")
                 waitfor=nil
                 i=i+3
             elseif char==waitfor then
                 -- ends up handling ' and "
                 waitfor=nil
-                table.insert(rtn, char.."\tn")
+                table.insert(rtn, char.."{x")
             else
                 -- waitfor didn't match, just push the char
                 table.insert(rtn, char)
             end
         -- Literal strings
         elseif char=='"' or char=="'" then
-            table.insert(rtn, "\t"..(config["string"] or 'r')..char)
+            table.insert(rtn, "{"..('r')..char)
             waitfor=char
         -- Multiline strings
         elseif char=='[' and text:sub(i+1,i+1) == '[' then
-            table.insert(rtn, "\t"..(config["string"] or 'r').."[[")
+            table.insert(rtn, "{"..('r').."[[")
             i=i+1
             waitfor=']]'
         -- Multiline comments
         elseif char=='-' and text:sub(i+1,i+3) == "-[[" then
-            table.insert(rtn, "\t"..(config["comment"] or 'c').."--[[")
+            table.insert(rtn, "{"..('c').."--[[")
             i=i+3
             waitfor='--]]'
         -- Single line comments
         elseif char=='-' and text:sub(i+1,i+1) == '-' then
-            table.insert(rtn, "\t"..(config["comment"] or 'c').."--")
+            table.insert(rtn, "{"..('c').."--")
             i=i+1
             waitfor='\n'
         elseif char=='\t' then
             table.insert(rtn, "    ")
+        elseif char=='{' then
+            table.insert(rtn, "{{")
         -- Operators
         elseif char=='[' or char==']'
             or char=='(' or char==')'
@@ -982,7 +867,7 @@ function colorize( text, ch )
             or char==',' or char=='.'
             or char==":" or char==";"
             then
-            table.insert(rtn, "\t"..(config["operator"] or 'G')..char.."\tn")
+            table.insert(rtn, "{"..('G')..char.."{x")
         -- Words
         elseif string.find(char, "%a") then
             local start,finish,word=string.find(text,"(%a[%w_%.]*)",i)
@@ -990,22 +875,22 @@ function colorize( text, ch )
             if word=="function" then
                 table.insert(funtrack,1,nestlevel)
                 nestlevel=nestlevel+1
-                table.insert(rtn, "\t"..(config["function"] or 'C')..word.."\tn")
+                table.insert(rtn, "{"..('C')..word.."{x")
             -- these two words account for do, while, if, and for
             elseif word=="do" or word=="if" then
                 nestlevel=nestlevel+1
-                table.insert(rtn, "\t"..(config["keywords"] or 'Y')..word.."\tn")
+                table.insert(rtn, "{"..('Y')..word.."{x")
             elseif word=="end" then
                 nestlevel=nestlevel-1
                 if funtrack[1] and funtrack[1]==nestlevel then
                     table.remove(funtrack,1)
-                    table.insert(rtn, "\t"..(config["function"] or 'C')..word.."\tn")
+                    table.insert(rtn, "{"..('C')..word.."{x")
                 else
-                    table.insert(rtn, "\t"..(config["keywords"] or 'Y')..word.."\tn")
+                    table.insert(rtn, "{"..('Y')..word.."{x")
                 end
             -- boolean
             elseif word=="true" or word=="false" then
-                table.insert(rtn, "\t"..(config["boolean"] or 'r')..word.."\tn")
+                table.insert(rtn, "{"..('r')..word.."{x")
             -- 'keywords'
             elseif word=="and" or word=="in" or word=="repeat"
                 or word=="break" or word=="local" or word=="return"
@@ -1013,16 +898,16 @@ function colorize( text, ch )
                 or word=="not" or word=="elseif" or word=="if"
                 or word=="or" or word=="until" or word=="while"
                 then
-                table.insert(rtn, "\t"..(config["keywords"] or 'Y')..word.."\tn")
+                table.insert(rtn, "{"..('Y')..word.."{x")
             -- nil
             elseif word=="nil" then
-                table.insert(rtn, "\t"..(config["nil"] or 'r')..word.."\tn")
+                table.insert(rtn, "{"..('r')..word.."{x")
             else
                 -- Search globals
                 local found=false
                 for k,v in pairs(main_lib_names) do
                     if word==v then
-                        table.insert(rtn, "\t"..(config["global"] or 'C')..word.."\tn")
+                        table.insert(rtn, "{"..('C')..word.."{x")
                         found=true
                         break
                     end
@@ -1038,7 +923,7 @@ function colorize( text, ch )
             local start,finish=string.find(text,"([%d%.]+)",i)
             word=text:sub(start,finish)
             i=finish
-            table.insert(rtn, "\t"..(config["number"] or 'm')..word.."\tn")
+            table.insert(rtn, "{"..('m')..word.."{x")
         else
             -- Whatever else
             table.insert(rtn,char)
@@ -1964,6 +1849,7 @@ function do_path( ch, argument )
 end
 
 -- luahelp section
+if false then
 local luatypes=getluatype() -- list of type names
 local function luahelp_usage( ch )
     local out={}
@@ -2497,3 +2383,4 @@ quest buy <title>     -- Purchase a ptitle
     end
 end
 -- end do_ptitle section
+end

@@ -2008,6 +2008,7 @@ struct mprog_code
 {
     bool          is_lua;
     sh_int        vnum;
+    sh_int        security;
     char *        code;
     MPROG_CODE *    next;
 };

@@ -572,7 +572,6 @@ char *buf_string (BUFFER * buffer)
 
 MPROG_LIST *new_mprog (void)
 {
-    static MPROG_LIST mp_zero;
     MPROG_LIST *mp;
 
     mp = alloc_MTRIG();

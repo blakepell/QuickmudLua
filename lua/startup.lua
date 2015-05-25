@@ -2,6 +2,7 @@ package.path = mud.luadir() .. "?.lua"
 
 glob_tprintstr=require "tprint"
 require "serialize"
+require "commands"
 
 envtbl={} -- game object script environments
 interptbl={} -- key is game object pointer, table of desc=desc pointer, name=char name
@@ -45,30 +46,6 @@ end
 
 function glob_randnum(low, high)
     return math.floor( (mt.rand()*(high+1-low) + low)) -- people usually want inclusive
-end
-
-function glob_awardptitle( ch, ptitle)
-    if not ch.ispc then
-        error("Can't add ptitles to NPCs.")
-    end
-
-    if string.find(ptitle, "[^a-zA-Z\.]") then
-        error("Ptitles can only contain letters and '.'")
-    end
-
-    if not ch.ptitles then 
-        forceset(ch, "ptitles",{})
-    end
-
-    local lst=ch.ptitles
-
-    -- If already has it, do nothing
-    for k,v in pairs(lst) do
-        if v==ptitle then return end
-    end
-
-    table.insert(lst, ptitle)
-    table.sort(lst)
 end
 
 function SaveTable( name, tbl, areaFname )
@@ -385,138 +362,6 @@ function list_files ( path )
     return rtn
 end
 
-function save_mudconfig()
-    local tbl=mudconfig()
-    local f=io.open("mudconfig.lua", "w")
-    out,saved=serialize.save("mudconfig", tbl)
-    f:write(out)
-
-    f:close()
-end
-
-function load_mudconfig()
-    local f=loadfile("mudconfig.lua")
-    if f==nil then return end
-
-    tmp=f()
-    if not(tmp==nil) then
-        for k,v in pairs(tmp) do
-            -- do pcall cause we might have dropped some options
-            local res,err=pcall(mudconfig, k, v)
-            if not(res) then
-                log("Couldn't set option '"..k.."'")
-            end
-        end
-    end
-end
-
-function save_comm( name, tbl )
-    local f=io.open(name..".lua", "w")
-    out,saved=serialize.save("tbl", tbl)
-    f:write(out)
-
-    f:close()
-end
-
-function load_comm( name )
-    local f=loadfile(name..".lua")
-    if f==nil then return {} end
-
-    return f()
-end
-
--- Dijkstra style shortest path algorithm
-function findpath( start, finish )
-    local dist={}
-    dist[start]=0
-    local previous={}
-    local dirs={}
-
-    local Q = Queue.new()
-    Queue.pushleft( Q, start )
-    local finished={}
-    local found
-
-    local lowest
-    while not( Queue.isempty( Q ) ) do
-      local lowest=Queue.popleft( Q )
-        
-      if not(finished[lowest]) then
- 
-        finished[lowest]=true
-
-        if lowest==finish then found=true break end
-
-        -- any exit has a length of 1
-        local alt = dist[lowest] + 1
-        -- handle normal exits
-        for _,dirname in pairs(lowest.exits) do
-            local toroom = lowest[dirname].toroom
-            if not(finished[toroom]) then
-                Queue.pushright( Q, toroom )
-            end
-
-            dist[toroom] = dist[toroom] or math.huge
-            if alt < dist[toroom] then
-                dist[toroom] = alt
-                previous[toroom] = lowest
-                dirs[toroom] = dirname
-            end
-        end
-        -- handle portals
-        for _,obj in pairs(lowest.contents) do
-            if obj.otype=="portal" then
-                local toroom=getroom(obj.toroom) 
-                if toroom then
-                    if not(finished[toroom]) then
-                        Queue.pushright( Q, toroom )
-                    end
-
-                    dist[toroom] = dist[toroom] or math.huge
-                    if alt < dist[toroom] then
-                        dist[toroom] = alt
-                        previous[toroom] = lowest
-                        dirs[toroom] = "enter "..obj.name
-                    end
-                end
-            end
-        end
-      end
-    end
-
-    if not found then
-        return nil
-    end
-
-    local result={}
-    local rm=finish
-    while previous[rm] do
-        table.insert( result, 1, dirs[rm] )
-        rm=previous[rm]
-    end
-
-    return result
-end
-
-function show_image_to_char( ch, txt )
-    -- Asssume it's a MXP url already
-    local url=string.match( txt, '\t<a href="(.-)">')
-    if url==nil then return end
-
-    local imgfile=url:find("[^/]-%.gif") or
-                  url:find("[^/]-%.jpg") or
-                  url:find("[^/]-%.jpeg") or
-                  url:find("[^/]-%.png")
-
-    if imgfile==nil then return end
-
-    local path=url:sub(1, imgfile-1)
-    local filename=url:sub(imgfile)
-
-    local snd=string.format( '\n\r\t<image %s url="%s">\n\r', filename, path)
-    sendtochar( ch, snd )
-end
-
 function start_con_handler( d, fun, ... )
     forceset(d, "constate", "lua_handler")
     forceset(d, "conhandler", coroutine.create( fun ) )
@@ -543,32 +388,142 @@ function lua_con_handler( d, ...)
     
 end
 
-function confirm_yes_no( DO_FUN_caller, d,
-        yes_callback, yes_arg, 
-        no_callback, no_arg )
+function colorize( text )
+    local rtn={}
+    local len=#text
+    local i=0
+    local word
+    local waitfor
+    local funtrack={}
+    local nestlevel=0 -- how many functions are we inside
 
-    local function confirm_handler()
-        while true do
-            sendtochar( d.character, "Enter Y or n: ")
+    while (i < len) do
+        i=i+1
+        local char=text:sub(i,i)
 
-            local cmd=coroutine.yield()
-            
-            if cmd=="Y" then
-                if yes_callback then
-                    DO_FUN_caller( yes_callback, d.character, yes_arg and yes_arg or "" )
-                end
-                return
-            elseif cmd=="n" then
-                if no_callback then
-                    DO_FUN_cllaer( no_callback, d.character, no_arg and no-arg or "" )
-                end
-                return
+        if waitfor then
+            if waitfor=='\n' 
+                and waitfor==char 
+                then
+                waitfor=nil
+                table.insert(rtn,"{x"..char)
+            elseif waitfor==']]' 
+                and waitfor==text:sub(i,i+1) 
+                then
+                table.insert(rtn,"]]{x")
+                waitfor=nil
+                i=i+1
+            elseif waitfor=='--]]'
+                and waitfor==text:sub(i,i+3)
+                then
+                table.insert(rtn,"--]]{x")
+                waitfor=nil
+                i=i+3
+            elseif char==waitfor then
+                -- ends up handling ' and "
+                waitfor=nil
+                table.insert(rtn, char.."{x")
             else
-                sendtochar( d.character, "Invalid response!\n\r")
+                -- waitfor didn't match, just push the char
+                table.insert(rtn, char)
             end
+        -- Literal strings
+        elseif char=='"' or char=="'" then
+            table.insert(rtn, "{"..('r')..char)
+            waitfor=char
+        -- Multiline strings
+        elseif char=='[' and text:sub(i+1,i+1) == '[' then
+            table.insert(rtn, "{"..('r').."[[")
+            i=i+1
+            waitfor=']]'
+        -- Multiline comments
+        elseif char=='-' and text:sub(i+1,i+3) == "-[[" then
+            table.insert(rtn, "{"..('c').."--[[")
+            i=i+3
+            waitfor='--]]'
+        -- Single line comments
+        elseif char=='-' and text:sub(i+1,i+1) == '-' then
+            table.insert(rtn, "{"..('c').."--")
+            i=i+1
+            waitfor='\n'
+        elseif char=='\t' then
+            table.insert(rtn, "    ")
+        elseif char=='{' then
+            table.insert(rtn, "{{")
+        -- Operators
+        elseif char=='[' or char==']'
+            or char=='(' or char==')'
+            or char=='=' or char=='%'
+            or char=='<' or char=='>'
+            or char=='{' or char=='}'
+            or char=='/' or char=='*'
+            or char=='+' or char=='-'
+            or char==',' or char=='.'
+            or char==":" or char==";"
+            then
+            table.insert(rtn, "{"..('G')..char.."{x")
+        -- Words
+        elseif string.find(char, "%a") then
+            local start,finish,word=string.find(text,"(%a[%w_%.]*)",i)
+            i=finish
+            if word=="function" then
+                table.insert(funtrack,1,nestlevel)
+                nestlevel=nestlevel+1
+                table.insert(rtn, "{"..('C')..word.."{x")
+            -- these two words account for do, while, if, and for
+            elseif word=="do" or word=="if" then
+                nestlevel=nestlevel+1
+                table.insert(rtn, "{"..('Y')..word.."{x")
+            elseif word=="end" then
+                nestlevel=nestlevel-1
+                if funtrack[1] and funtrack[1]==nestlevel then
+                    table.remove(funtrack,1)
+                    table.insert(rtn, "{"..('C')..word.."{x")
+                else
+                    table.insert(rtn, "{"..('Y')..word.."{x")
+                end
+            -- boolean
+            elseif word=="true" or word=="false" then
+                table.insert(rtn, "{"..('r')..word.."{x")
+            -- 'keywords'
+            elseif word=="and" or word=="in" or word=="repeat"
+                or word=="break" or word=="local" or word=="return"
+                or word=="for" or word=="then" or word=="else"
+                or word=="not" or word=="elseif" or word=="if"
+                or word=="or" or word=="until" or word=="while"
+                then
+                table.insert(rtn, "{"..('Y')..word.."{x")
+            -- nil
+            elseif word=="nil" then
+                table.insert(rtn, "{"..('r')..word.."{x")
+            else
+                -- Search globals
+                local found=false
+                for k,v in pairs(main_lib_names) do
+                    if word==v then
+                        table.insert(rtn, "{"..('C')..word.."{x")
+                        found=true
+                        break
+                    end
+                end
+
+                -- Nothing special, just shove it
+                if not(found) then
+                    table.insert(rtn,word)
+                end
+            end
+        -- Numbers
+        elseif string.find(char, "%d") then
+            local start,finish=string.find(text,"([%d%.]+)",i)
+            word=text:sub(start,finish)
+            i=finish
+            table.insert(rtn, "{"..('m')..word.."{x")
+        else
+            -- Whatever else
+            table.insert(rtn,char)
         end
     end
 
-    start_con_handler( d, confirm_handler)
+    return table.concat(rtn)
 
 end

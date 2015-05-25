@@ -2077,7 +2077,7 @@ void send_to_desc (const char *txt, DESCRIPTOR_DATA * d)
     return;
 }
 
-void page_to_char (const char *txt, CHAR_DATA * ch)
+void page_to_char_new (const char *txt, CHAR_DATA * ch, bool raw)
 {
     const char *point;
     char *point2;
@@ -2095,7 +2095,7 @@ void page_to_char (const char *txt, CHAR_DATA * ch)
         {
             for (point = txt; *point; point++)
             {
-                if (*point == '{')
+                if (*point == '{' && !raw)
                 {
                     point++;
                     skip = colour (*point, ch, point2);
@@ -2116,7 +2116,7 @@ void page_to_char (const char *txt, CHAR_DATA * ch)
         {
             for (point = txt; *point; point++)
             {
-                if (*point == '{')
+                if (*point == '{' && !raw)
                 {
                     point++;
                     continue;
@@ -2135,6 +2135,10 @@ void page_to_char (const char *txt, CHAR_DATA * ch)
     return;
 }
 
+void page_to_char(const char *txt, CHAR_DATA *ch)
+{
+    page_to_char_new(txt, ch, FALSE);
+}
 /* string pager */
 void show_string (struct descriptor_data *d, char *input)
 {
