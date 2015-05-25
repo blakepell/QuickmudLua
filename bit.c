@@ -175,3 +175,14 @@ char *flag_string (const struct flag_type *flag_table, int bits)
     }
     return (buf[cnt][0] != '\0') ? buf[cnt] + 1 : "none";
 }
+
+const char* flag_bit_name( const struct flag_type flag_table[], int flag )
+{
+    static char buf[100];
+    int i;
+    for ( i = 0; flag_table[i].name != NULL; i++ )
+    if ( flag_table[i].bit == flag )
+        return flag_table[i].name;
+    sprintf( buf, "none(%d)", flag );
+    return buf;
+}

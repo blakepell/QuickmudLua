@@ -55,9 +55,6 @@ LUA_OBJ_TYPE *type_list [] =
 #define CHSET( field, sec ) SETP( CH, field, sec)
 #define CHMETH( field, sec ) METH( CH, field, sec)
 
-
-#if 0
-
 #define OBJGET( field, sec ) GETP( OBJ, field, sec)
 #define OBJSET( field, sec ) SETP( OBJ, field, sec)
 #define OBJMETH( field, sec ) METH( OBJ, field, sec)
@@ -95,7 +92,6 @@ LUA_OBJ_TYPE *type_list [] =
 
 #define AFFGET( field, sec) GETP( AFFECT, field, sec)
 
-#endif
 
 typedef struct lua_prop_type
 {
@@ -1642,28 +1638,6 @@ OBJVGETSTR( attacktype, ITEM_WEAPON, attack_table[ud_obj->value[3]].name )
 
 OBJVGETSTR( damnoun, ITEM_WEAPON, attack_table[ud_obj->value[3]].noun )
 
-static int OBJ_get_damavg( lua_State *LS )
-{
-    OBJ_DATA *ud_obj=check_OBJ( LS, 1);
-    if (ud_obj->item_type != ITEM_WEAPON )
-        luaL_error(LS, "damavg for %s only.", 
-                item_name( ITEM_WEAPON ) );
-    
-    lua_pushinteger( LS, average_weapon_dam( ud_obj ) );
-    return 1;
-}
-
-static int OBJPROTO_get_damavg( lua_State *LS )
-{
-    OBJ_INDEX_DATA *ud_obj=check_OBJPROTO( LS, 1);
-    if (ud_obj->item_type != ITEM_WEAPON )
-        luaL_error(LS, "damavg for %s only.",
-                item_name( ITEM_WEAPON ) );
-    
-    lua_pushinteger( LS, average_weapon_index_dam( ud_obj ) );
-    return 1;
-}
-
 OBJVGETINT( key, ITEM_CONTAINER, 2 )
 
 OBJVGETINT( capacity, ITEM_CONTAINER, 3 )
@@ -1767,7 +1741,7 @@ OBJVM( funcname, \
     if (ud_obj->item_type != otype)\
         luaL_error( LS, #funcname " for %s only", item_name( otype ) );\
     \
-    return check_iflag( LS, #funcname, flagtbl, ud_obj->value[ vind ] );\
+    return check_flag( LS, #funcname, flagtbl, ud_obj->value[ vind ] );\
 )
 
 OBJVM( apply,
@@ -3524,7 +3498,7 @@ static const LUA_PROP_TYPE CH_method_table [] =
 }; 
 
 /* end CH section */
-#if 0
+
 /* OBJ section */
 static int OBJ_set_weapontype( lua_State *LS)
 {
@@ -3553,18 +3527,10 @@ static int OBJ_setexitflag( lua_State *LS)
     if (ud_obj->item_type != ITEM_PORTAL)
         return luaL_error(LS, "setexitflag for portal only");
 
-    return set_iflag( LS, "exit_flags", exit_flags, &ud_obj->value[1] );
-}
-    
-
-static int OBJ_rvnum ( lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-    lua_remove(LS,1);
-
-    return L_rvnum( LS, ud_obj->pIndexData->area );
+    return set_flag( LS, "exit_flags", exit_flags, &ud_obj->value[1] );
 }
 
+#if 0
 static int OBJ_loadfunction (lua_State *LS)
 {
     lua_obj_program( NULL, RUNDELAY_VNUM, NULL,
@@ -3572,31 +3538,6 @@ static int OBJ_loadfunction (lua_State *LS)
                 NULL, NULL,
                 TRIG_CALL, 0 );
     return 0;
-}
-
-static int OBJ_setval (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-    lua_remove( LS, 1 );
-    return set_luaval( LS, &(ud_obj->luavals) );
-}
-
-static int OBJ_getval (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-    lua_remove( LS, 1);
-
-    return get_luaval( LS, &(ud_obj->luavals) );
-}
-
-static int OBJ_delay (lua_State *LS)
-{
-    return L_delay(LS);
-}
-
-static int OBJ_cancel (lua_State *LS)
-{
-    return L_cancel(LS);
 }
 
 static int OBJ_savetbl (lua_State *LS)
@@ -3673,7 +3614,7 @@ static int OBJ_loadprog (lua_State *LS)
 
     return 1;
 }
-
+#endif
 static int OBJ_destroy( lua_State *LS)
 {
     OBJ_DATA *ud_obj = check_OBJ(LS, 1);
@@ -3690,32 +3631,9 @@ static int OBJ_destroy( lua_State *LS)
 static int OBJ_clone( lua_State *LS)
 {
     OBJ_DATA *ud_obj = check_OBJ(LS, 1);
-    bool copy_luavals=FALSE;
 
-    if (!lua_isnone(LS,2))
-    {
-        copy_luavals=lua_toboolean(LS,2);
-    }
-
-    OBJ_DATA *clone = create_object(ud_obj->pIndexData);
+    OBJ_DATA *clone = create_object(ud_obj->pIndexData,0);
     clone_object( ud_obj, clone );
-
-    if (copy_luavals)
-    {
-        LUA_EXTRA_VAL *luaval;
-        LUA_EXTRA_VAL *cloneval;
-        for ( luaval=ud_obj->luavals; luaval ; luaval=luaval->next )
-        {
-            cloneval=new_luaval(
-                    luaval->type,
-                    str_dup( luaval->name ),
-                    str_dup( luaval->val ),
-                    luaval->persist);
-
-            cloneval->next=clone->luavals;
-            clone->luavals=cloneval;
-        }
-    }
 
     if (ud_obj->carried_by)
         obj_to_char( clone, ud_obj->carried_by );
@@ -3746,7 +3664,7 @@ static int OBJ_oload (lua_State *LS)
     if (!pObjIndex)
         luaL_error(LS, "No object with vnum: %d", num);
 
-    OBJ_DATA *obj = create_object(pObjIndex);
+    OBJ_DATA *obj = create_object(pObjIndex,0);
     obj_to_obj(obj,ud_obj);
 
     if ( !push_OBJ(LS, obj) )
@@ -3821,7 +3739,7 @@ static int OBJ_setweaponflag( lua_State *LS)
     if (ud_obj->item_type != ITEM_WEAPON)
         return luaL_error(LS, "setweaponflag for weapon only");
 
-    return set_iflag( LS, "weapon_type2", weapon_type2, &ud_obj->value[4]);
+    return set_flag( LS, "weapon_type2", weapon_type2, &ud_obj->value[4]);
 }
 
 static int OBJ_get_name (lua_State *LS)
@@ -3870,21 +3788,6 @@ static int OBJ_set_description (lua_State *LS)
     free_string(ud_obj->description);
     ud_obj->description=str_dup(arg);
     return 0;
-}
-
-
-static int OBJ_get_clan (lua_State *LS)
-{
-    lua_pushstring( LS,
-            clan_table[(check_OBJ(LS,1))->clan].name);
-    return 1;
-}
-
-static int OBJ_get_clanrank (lua_State *LS)
-{
-    lua_pushinteger( LS,
-            (check_OBJ(LS,1))->rank);
-    return 1;
 }
 
 static int OBJ_get_level (lua_State *LS)
@@ -3989,13 +3892,6 @@ static int OBJ_get_proto (lua_State *LS)
         return 0;
     else
         return 1;
-}
-
-static int OBJ_get_ingame (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-    lua_pushboolean( LS, is_obj_ingame( ud_obj->pIndexData ) );
-    return 1;
 }
 
 static int OBJ_get_contents (lua_State *LS)
@@ -4140,33 +4036,11 @@ static int OBJ_get_affects ( lua_State *LS)
     return 1;
 }
 
-static int OBJ_set_attacktype ( lua_State *LS)
-{
-    OBJ_DATA *ud_obj = check_OBJ(LS, 1);
-    const char *attack_arg = check_string(LS, 2, MIL);
-    int attack; 
-
-    if (ud_obj->item_type != ITEM_WEAPON )
-        return luaL_error(LS, "attacktype for weapon only.");
-
-    attack=attack_exact_lookup(attack_arg);
-    if ( attack == -1 )
-        return luaL_error(LS, "No such attack type '%s'",
-                attack_arg );
-
-    ud_obj->value[3]=attack;
-
-    return 0;
-}
-#endif
 static const LUA_PROP_TYPE OBJ_get_table [] =
 {
-#if 0
     OBJGET(name, 0),
     OBJGET(shortdescr, 0),
     OBJGET(description, 0),
-    OBJGET(clan, 0),
-    OBJGET(clanrank, 0),
     OBJGET(level, 0),
     OBJGET(owner, 0),
     OBJGET(cost, 0),
@@ -4185,18 +4059,12 @@ static const LUA_PROP_TYPE OBJ_get_table [] =
     OBJGET(wearlocation, 0),
     OBJGET(contents, 0),
     OBJGET(proto, 0),
-    OBJGET(ingame, 0),
     OBJGET(timer, 0),
     OBJGET(affects, 0),
     
     /*light*/
     OBJGET(light, 0),
 
-    /*arrows*/
-    OBJGET(arrowcount, 0),
-    OBJGET(arrowdamage, 0),
-    OBJGET(arrowdamtype, 0),
-    
     /* wand, staff */
     OBJGET(spelllevel, 0),
     OBJGET(chargestotal, 0),
@@ -4225,9 +4093,7 @@ static const LUA_PROP_TYPE OBJ_get_table [] =
     OBJGET( numdice, 0),
     OBJGET( dicetype, 0),
     OBJGET( attacktype, 0),
-    OBJGET( damtype, 0),
     OBJGET( damnoun, 0),
-    OBJGET( damavg, 0),
 
     /* container */
     //maxweight
@@ -4256,13 +4122,11 @@ static const LUA_PROP_TYPE OBJ_get_table [] =
     OBJGET( silver, 0),
     OBJGET( gold, 0),
     
-#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE OBJ_set_table [] =
 {
-#if 0
     OBJSET(name, 5 ),
     OBJSET(shortdescr, 5),
     OBJSET(description, 5),
@@ -4272,9 +4136,7 @@ static const LUA_PROP_TYPE OBJ_set_table [] =
     OBJSET(weight, 5),
     OBJSET(room, 5),
     OBJSET(carriedby, 5),
-    OBJSET(attacktype, 5),
     OBJSET(weapontype, 9),
-#endif
        
     ENDPTABLE
 };
@@ -4282,26 +4144,20 @@ static const LUA_PROP_TYPE OBJ_set_table [] =
 
 static const LUA_PROP_TYPE OBJ_method_table [] =
 {
-#if 0
     OBJMETH(extra, 0),
     OBJMETH(wear, 0),
     OBJMETH(apply, 0),
     OBJMETH(destroy, 1),
     OBJMETH(clone, 1),
     OBJMETH(echo, 1),
-    OBJMETH(loadprog, 1),
-    OBJMETH(loadscript, 1),
-    OBJMETH(loadstring, 1),
-    OBJMETH(loadfunction, 1),
+    //OBJMETH(loadprog, 1),
+    //OBJMETH(loadscript, 1),
+    //OBJMETH(loadstring, 1),
+    //OBJMETH(loadfunction, 1),
     OBJMETH(oload, 1),
-    OBJMETH(savetbl, 1),
-    OBJMETH(loadtbl, 1),
+    //OBJMETH(savetbl, 1),
+    //OBJMETH(loadtbl, 1),
     OBJMETH(tprint, 1),
-    OBJMETH(delay, 1),
-    OBJMETH(cancel, 1),
-    OBJMETH(setval, 1),
-    OBJMETH(getval, 1),
-    OBJMETH(rvnum, 1),
     
     /* portal only */
     OBJMETH(exitflag, 0),
@@ -4317,7 +4173,6 @@ static const LUA_PROP_TYPE OBJ_method_table [] =
     
     /* container only */
     OBJMETH(containerflag, 0),
-#endif
     
     ENDPTABLE
 }; 
@@ -4521,12 +4376,6 @@ static int AREA_get_maxlevel( lua_State *LS)
 static int AREA_get_security( lua_State *LS)
 {
     lua_pushinteger( LS, (check_AREA(LS, 1))->security);
-    return 1;
-}
-
-static int AREA_get_ingame( lua_State *LS)
-{
-    lua_pushboolean( LS, is_area_ingame(check_AREA(LS, 1)));
     return 1;
 }
 
@@ -4773,7 +4622,6 @@ static const LUA_PROP_TYPE AREA_get_table [] =
     AREAGET(maxvnum, 0),
     AREAGET(credits, 0),
     AREAGET(builders, 0),
-    AREAGET(ingame, 0),
     AREAGET(rooms, 0),
     AREAGET(people, 0),
     AREAGET(players, 0),
@@ -5193,13 +5041,6 @@ static int ROOM_get_resets (lua_State *LS)
     return 1;
 }
 
-static int ROOM_get_ingame( lua_State *LS )
-{
-    lua_pushboolean( LS,
-            is_room_ingame( check_ROOM(LS,1) ) );
-    return 1;
-}
-
 static int ROOM_get_rtrigs ( lua_State *LS)
 {
     ROOM_INDEX_DATA *ud_room=check_ROOM( LS, 1);
@@ -5227,7 +5068,6 @@ static const LUA_PROP_TYPE ROOM_get_table [] =
     ROOMGET(manarate, 0),
     ROOMGET(owner, 0),
     ROOMGET(description, 0),
-    ROOMGET(ingame, 0),
     ROOMGET(sector, 0),
     ROOMGET(contents, 0),
     ROOMGET(area, 0),
@@ -5574,13 +5414,6 @@ OPGETV(2);
 OPGETV(3);
 OPGETV(4);
 
-static int OBJPROTO_get_ingame ( lua_State *LS )
-{
-    lua_pushboolean( LS,
-            is_obj_ingame( check_OBJPROTO(LS,1) ) );
-    return 1;
-}
-
 static int OBJPROTO_get_area ( lua_State *LS )
 {
     if (push_AREA(LS, (check_OBJPROTO(LS,1))->area) )
@@ -5651,7 +5484,6 @@ static const LUA_PROP_TYPE OBJPROTO_get_table [] =
     OPGET( v3, 0),
     OPGET( v4, 0),
     OPGET( area, 0),
-    OPGET( ingame, 0),
     OPGET( otrigs, 0),
     OPGET( affects, 0),
 
@@ -5693,7 +5525,6 @@ static const LUA_PROP_TYPE OBJPROTO_get_table [] =
     OPGET( attacktype, 0),
     OPGET( damtype, 0),
     OPGET( damnoun, 0),
-    OPGET( damavg, 0),
 
     /* container */
     //maxweight
@@ -5846,7 +5677,6 @@ MPGETSTR( size, flag_bit_name(size_flags, ud_mobp->size),"" ,"");
 MPGETSTR( stance, stances[ud_mobp->stance].name,
     "Mob's default stance." ,
     "See 'stances' table.");
-MPGETBOOL( ingame, is_mob_ingame( ud_mobp ),"" ,"");
 MPGETINT( count, ud_mobp->count, "", "");
 
 static int MOBPROTO_get_area (lua_State *LS)
@@ -5927,7 +5757,6 @@ static const LUA_PROP_TYPE MOBPROTO_get_table [] =
     MPGET( size, 0),
     MPGET( stance, 0),
     MPGET( area, 0),
-    MPGET( ingame, 0),
     MPGET( mtrigs, 0),
     MPGET( shop, 0),
     MPGET( bossachv, 0),
