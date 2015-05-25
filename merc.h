@@ -2006,6 +2006,7 @@ struct mprog_list
 
 struct mprog_code
 {
+    bool          is_lua;
     sh_int        vnum;
     char *        code;
     MPROG_CODE *    next;
@@ -2768,13 +2769,8 @@ declf(EXIT, EXIT_DATA)
 declf(RESET, RESET_DATA)
 declf(MOBPROTO, MOB_INDEX_DATA)
 declf(OBJPROTO, OBJ_INDEX_DATA)
-/*
-declf(PROG, PROG_CODE)
-declf(MTRIG, PROG_LIST)
-declf(OTRIG, PROG_LIST)
-declf(ATRIG, PROG_LIST)
-declf(RTRIG, PROG_LIST)
-*/
+declf(MPROG, MPROG_CODE)
+declf(MTRIG, MPROG_LIST)
 declf(SHOP, SHOP_DATA)
 declf(AFFECT, AFFECT_DATA)
 declf(HELP, HELP_DATA)

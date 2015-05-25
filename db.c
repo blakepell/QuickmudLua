@@ -1534,7 +1534,7 @@ void load_mobprogs (FILE * fp)
         }
         fBootDb = TRUE;
 
-        pMprog = alloc_perm (sizeof (*pMprog));
+        pMprog = alloc_MPROG();
         pMprog->vnum = vnum;
         pMprog->code = fread_string (fp);
         if (mprog_list == NULL)

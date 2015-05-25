@@ -15,7 +15,6 @@
 LUA_OBJ_TYPE *type_list [] =
 {
     &CH_type,
-    /*
     &OBJ_type,
     &AREA_type,
     &ROOM_type,
@@ -25,14 +24,10 @@ LUA_OBJ_TYPE *type_list [] =
     &MOBPROTO_type,
     &SHOP_type,
     &AFFECT_type,
-    &PROG_type,
+    &MPROG_type,
     &MTRIG_type,
-    &OTRIG_type,
-    &ATRIG_type,
-    &RTRIG_type,
     &HELP_type,
     &DESCRIPTOR_type,
-    */
     NULL
 };
 
@@ -2225,33 +2220,6 @@ OBJVIF ( containerflag, ITEM_CONTAINER, 1, container_flags )
 
 /* CH section */
 #if 0
-static int CH_rvnum ( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    lua_remove(LS,1);
-
-    if (IS_NPC(ud_ch))
-        return L_rvnum( LS, ud_ch->pIndexData->area );
-    else if (!ud_ch->in_room)
-        return luaL_error(LS, "%s not in a room.", ud_ch->name );
-    else
-        return L_rvnum( LS, ud_ch->in_room->area );
-}
-
-static int CH_setval ( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    lua_remove(LS, 1);
-    return set_luaval( LS, &(ud_ch->luavals) );
-}
-
-static int CH_getval ( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    lua_remove(LS,1);
-    return get_luaval( LS, &(ud_ch->luavals) );
-}
-
 static int CH_randchar (lua_State *LS)
 {
     CHAR_DATA *ch=get_random_char(check_CH(LS,1) );
@@ -2264,8 +2232,10 @@ static int CH_randchar (lua_State *LS)
         return 1;
 
 }
+#endif
 
 /* analog of run_olc_editor in olc.c */
+/*
 static bool run_olc_editor_lua( CHAR_DATA *ch, const char *argument )
 {
     if (IS_NPC(ch))
@@ -2319,7 +2289,8 @@ static int CH_olc (lua_State *LS)
 
     return 0;
 }
-
+*/
+#if 0
 static int CH_tprint ( lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS, 1);
@@ -2334,7 +2305,6 @@ static int CH_tprint ( lua_State *LS)
 
     return 0;
 }
-
 static int CH_savetbl (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -2429,7 +2399,6 @@ static int CH_loadprog (lua_State *LS)
 
     return 0;
 }
-
 static int CH_emote (lua_State *LS)
 {
     do_emote( check_CH(LS, 1), check_fstring( LS, 2, MIL) );
@@ -2580,7 +2549,6 @@ static int CH_gtransfer (lua_State *LS)
 
 static int CH_otransfer (lua_State *LS)
 {
-
     do_mpotransfer( check_CH(LS, 1), check_fstring( LS, 2, MIL));
 
     return 0;
@@ -2633,32 +2601,11 @@ static int CH_damage (lua_State *LS)
                 "Actor and victim must be in same room." );
     int dam=luaL_checkinteger(LS, 3);
     
-    bool kill;
-    if ( !lua_isnone( LS, 4 ) )
-    {
-        kill=lua_toboolean( LS, 4 );
-    }
-    else
-    {
-        kill=TRUE;
-    }
-
     int damtype;
-    if ( !lua_isnone( LS, 5 ) )
-    {
-        const char *dam_arg=check_string( LS, 5, MIL );
-        damtype=flag_lookup( dam_arg, damage_type );
-        if ( damtype == NO_FLAG )
-            luaL_error(LS, "No such damage type '%s'",
-                    dam_arg );
-    }
-    else
-    {
-        damtype=DAM_NONE;
-    }
+    damtype=DAM_NONE;
 
     lua_pushboolean( LS,
-            deal_damage(ud_ch, victim, dam, TYPE_UNDEFINED, damtype, FALSE, kill) );
+            damage(ud_ch, victim, dam, TYPE_UNDEFINED, damtype, FALSE) );
     return 1;
 }
 
@@ -3087,42 +3034,8 @@ static int CH_say (lua_State *LS)
     do_say( ud_ch, check_fstring( LS, 2, MIL) );
     return 0;
 }
+
 #if 0
-
-static int CH_describe (lua_State *LS)
-{
-    bool cleanUp = false;
-    CHAR_DATA * ud_ch = check_CH (LS, 1);
-    OBJ_DATA * ud_obj;
-
-    if (lua_isnumber(LS, 2))
-    {
-        int num = (int)luaL_checknumber (LS, 2);
-        OBJ_INDEX_DATA *pObjIndex = get_obj_index( num );
-
-        if (!pObjIndex)
-        {
-            luaL_error(LS, "No object with vnum: %d", num);
-        }
-
-        ud_obj = create_object(pObjIndex);
-        cleanUp = true;
-    }
-    else
-    {
-        ud_obj = check_OBJ(LS, 2);
-    }
-
-    describe_item(ud_ch, ud_obj);
-
-    if (cleanUp)
-    {
-        extract_obj(ud_obj);
-    }
-
-    return 0;
-}
-
 static int CH_addaffect (lua_State *LS)
 {
     int arg_index=1;
@@ -3280,7 +3193,7 @@ static int CH_oload (lua_State *LS)
     if (!pObjIndex)
         luaL_error(LS, "No object with vnum: %d", num);
 
-    OBJ_DATA *obj = create_object(pObjIndex);
+    OBJ_DATA *obj = create_object(pObjIndex, 0);
     check_enchant_obj( obj );
 
     obj_to_char(obj,ud_ch);
@@ -3432,47 +3345,6 @@ static int CH_cancel (lua_State *LS)
     return L_cancel( LS );
 }
 
-static int CH_get_ac (lua_State *LS)
-{
-    lua_pushinteger( LS,
-            GET_AC( check_CH( LS, 1 ) ) );
-    return 1;
-}
-
-static int CH_get_acbase (lua_State *LS)
-{
-    lua_pushinteger( LS,
-            (check_CH( LS, 1 ))->armor );
-    return 1;
-}
-
-static int CH_set_acbase (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH( LS, 1);
-    if (!IS_NPC(ud_ch))
-        luaL_error(LS, "Can't set acbase on PCs.");
-
-    int val=luaL_checkinteger( LS, 2 );
-
-    if ( val < -10000 || val > 10000 )
-    {
-        return luaL_error( LS, "Value must be between -10000 and 10000." );
-    }
-    ud_ch->armor=val;
-
-    return 0;
-}
-
-static int CH_set_acpcnt (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH( LS, 1);
-    if (!IS_NPC(ud_ch))
-        luaL_error(LS, "Can't set acpcnt on PCs.");
-
-    /* analogous to mob_base_ac */
-    ud_ch->armor = 100 + ( ud_ch->level * -6 ) * luaL_checkinteger( LS, 2 ) / 100;
-    return 0;
-}
 
 static int CH_set_waitcount (lua_State *LS)
 {
@@ -3485,21 +3357,6 @@ static int CH_set_waitcount (lua_State *LS)
     }
     
     ud_ch->wait=val;
-
-    return 0;
-}
-
-static int CH_set_stopcount (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH( LS, 1);
-    int val=luaL_checkinteger( LS, 2);
-
-    if ( val < 0 || val > 10 )
-    {
-        return luaL_error( LS, "Valid stopcount range is 0 to 10");
-    }
-    
-    ud_ch->stop=val;
 
     return 0;
 }
@@ -3618,21 +3475,13 @@ static int CH_set_attacktype (lua_State *LS)
     return 1;
 }
 
-static int CH_get_damtype (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH( LS, 1);
-    lua_pushstring( LS,
-            flag_bit_name(damage_type, attack_table[ud_ch->dam_type].damage) );
-    return 1;
-}
-
 static int CH_get_damnoun (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH( LS, 1);
     lua_pushstring( LS, attack_table[ud_ch->dam_type].noun );
     return 1;
 }
-#endif
+
 static int CH_get_hp (lua_State *LS)
 {
     lua_pushinteger( LS,
@@ -3655,7 +3504,7 @@ static int CH_get_name (lua_State *LS)
             (check_CH(LS,1))->name );
     return 1;
 }
-#if 0
+
 static int CH_set_name (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH( LS, 1);
@@ -3666,14 +3515,14 @@ static int CH_set_name (lua_State *LS)
     ud_ch->name=str_dup(new);
     return 0;
 }
-#endif
+
 static int CH_get_level (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->level );
     return 1;
 }
-#if 0
+
 static int CH_set_level (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
@@ -3695,7 +3544,7 @@ static int CH_set_level (lua_State *LS)
     ud_ch->move = UMAX(0,mvpcnt*ud_ch->max_move);
     return 0;
 }
-#endif
+
 static int CH_get_maxhp (lua_State *LS)
 {
     lua_pushinteger( LS,
@@ -3703,7 +3552,6 @@ static int CH_get_maxhp (lua_State *LS)
     return 1;
 }
 
-#if 0
 static int CH_set_maxhp (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -3713,14 +3561,14 @@ static int CH_set_maxhp (lua_State *LS)
     ud_ch->max_hit = luaL_checkinteger( LS, 2);
     return 0;
 }
-#endif
+
 static int CH_get_mana (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->mana );
     return 1;
 }
-#if 0
+
 static int CH_set_mana (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH (LS, 1);
@@ -3729,14 +3577,14 @@ static int CH_set_mana (lua_State *LS)
     ud_ch->mana=num;
     return 0;
 }
-#endif
+
 static int CH_get_maxmana (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->max_mana );
     return 1;
 }
-#if 0
+
 static int CH_set_maxmana (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -3746,14 +3594,14 @@ static int CH_set_maxmana (lua_State *LS)
     ud_ch->max_mana = luaL_checkinteger( LS, 2);
     return 0;
 }
-#endif
+
 static int CH_get_move (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_CH(LS,1))->move );
     return 1;
 }
-#if 0
+
 static int CH_set_move (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH (LS, 1);
@@ -3762,7 +3610,7 @@ static int CH_set_move (lua_State *LS)
     ud_ch->move=num;
     return 0;
 }
-#endif
+
 static int CH_get_maxmove (lua_State *LS)
 {
     lua_pushinteger( LS,
@@ -3770,7 +3618,6 @@ static int CH_get_maxmove (lua_State *LS)
     return 1;
 }
 
-#if 0
 static int CH_set_maxmove (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -3913,14 +3760,9 @@ static int CH_get_ ## statname ( lua_State *LS ) \
 
 CHGETSTAT( str, STAT_STR );
 CHGETSTAT( con, STAT_CON );
-CHGETSTAT( vit, STAT_VIT );
-CHGETSTAT( agi, STAT_AGI );
 CHGETSTAT( dex, STAT_DEX );
 CHGETSTAT( int, STAT_INT );
 CHGETSTAT( wis, STAT_WIS );
-CHGETSTAT( dis, STAT_DIS );
-CHGETSTAT( cha, STAT_CHA );
-CHGETSTAT( luc, STAT_LUC );
 
 #define CHSETSTAT( statname, statnum ) \
 static int CH_set_ ## statname ( lua_State *LS ) \
@@ -3939,14 +3781,9 @@ static int CH_set_ ## statname ( lua_State *LS ) \
 
 CHSETSTAT( str, STAT_STR );     
 CHSETSTAT( con, STAT_CON );
-CHSETSTAT( vit, STAT_VIT );
-CHSETSTAT( agi, STAT_AGI );
 CHSETSTAT( dex, STAT_DEX );
 CHSETSTAT( int, STAT_INT );
 CHSETSTAT( wis, STAT_WIS );
-CHSETSTAT( dis, STAT_DIS );
-CHSETSTAT( cha, STAT_CHA );
-CHSETSTAT( luc, STAT_LUC );
 
 static int CH_get_clan (lua_State *LS)
 {
@@ -4017,13 +3854,6 @@ static int CH_get_waitcount (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
     lua_pushinteger(LS, ud_ch->wait);
-    return 1;
-}
-
-static int CH_get_stopcount (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    lua_pushinteger(LS, ud_ch->stop);
     return 1;
 }
 
@@ -4117,143 +3947,6 @@ static int CH_get_groupsize (lua_State *LS)
 {
     lua_pushinteger( LS,
             count_people_room( check_CH(LS, 1), 4 ) );
-    return 1;
-}
-
-static int CH_get_clanrank( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get clanrank on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->clan_rank);
-    return 1;
-}
-
-static int CH_get_remorts( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get remorts on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->remorts);
-    return 1;
-}
-
-static int CH_get_explored( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get explored on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->explored->set);
-    return 1;
-}
-
-static int CH_get_beheads( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get beheads on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->behead_cnt);
-    return 1;
-}
-
-static int CH_get_pkills( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get pkills on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->pkill_count);
-    return 1;
-}
-
-static int CH_get_pkdeaths( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get pkdeaths on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->pkill_deaths);
-    return 1;
-}
-
-static int CH_get_questpoints( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get questpoints on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->questpoints);
-    return 1;
-}
-
-static int CH_set_questpoints( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't set questpoints on NPCs.");
-
-    ud_ch->pcdata->questpoints=luaL_checkinteger(LS, 2);
-    return 0;
-}
-
-static int CH_get_achpoints( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get achpoints on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->achpoints);
-    return 1;
-}
-
-static int CH_get_bank( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get bank on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->bank);
-    return 1;
-}
-
-static int CH_get_mobkills( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get mobkills on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->mob_kills);
-    return 1;
-}
-
-static int CH_get_mobdeaths( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get mobdeaths on NPCs.");
-
-    lua_pushinteger( LS,
-            ud_ch->pcdata->mob_deaths);
-    return 1;
-}
-
-static int CH_get_bossachvs( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (IS_NPC(ud_ch)) luaL_error(LS, "Can't get bossachvs on NPCs.");
-
-    BOSSREC *rec;
-    int index=1;
-    lua_newtable(LS);
-
-    for ( rec=ud_ch->pcdata->boss_achievements ; rec; rec=rec->next)
-    {
-        if (push_BOSSREC(LS, rec))
-            lua_rawseti(LS, -2, index++);
-    }
-
     return 1;
 }
 
@@ -4361,69 +4054,6 @@ static int CH_set_description (lua_State *LS)
     return 0;
 }
 
-static int CH_get_ptitles( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS, 1);
-
-    if (IS_NPC(ud_ch))
-    {
-        return luaL_error(LS, "Can't get 'ptitles' for NPC.");
-    }
-
-    push_ref( LS, ud_ch->pcdata->ptitles );
-    return 1;
-}
-
-static int CH_set_ptitles( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-
-    if (IS_NPC(ud_ch))
-    {
-        return luaL_error(LS, "Can't set 'ptitles' for NPC.");
-    }
-
-    /* probably should check type and format of table in the future */
-
-    save_ref( LS, 2, &(ud_ch->pcdata->ptitles));
-    return 0;
-}
-
-static int CH_get_ptitle( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-
-    if (IS_NPC(ud_ch))
-    {
-        return luaL_error(LS, "Can't get 'ptitle' for NPC.");
-    }
-
-    lua_pushstring(LS, ud_ch->pcdata->pre_title);
-    return 1;
-}
-
-static int CH_set_ptitle( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-
-    if (IS_NPC(ud_ch))
-    {
-        return luaL_error(LS, "Can't set 'ptitle' for NPC.");
-    }
-
-    const char *new=check_string( LS, 2, MIL);
-    free_string(ud_ch->pcdata->pre_title);
-    ud_ch->pcdata->pre_title=str_dup(new);
-    return 0;
-}
-
-static int CH_get_stance (lua_State *LS)
-{
-    lua_pushstring( LS,
-            stances[ (check_CH( LS, 1) )->stance ].name );
-    return 1;
-}
-
 static int CH_get_pet (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -4454,37 +4084,6 @@ static int CH_get_leader (lua_State *LS)
         return 1;
     else
         return 0;
-}
-
-static int CH_set_pet (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    CHAR_DATA *pet=check_CH(LS,2);
-
-    if (IS_NPC(ud_ch))
-        luaL_error(LS,
-                "Can only add pets to PCs.");
-    else if (!IS_NPC(pet))
-        luaL_error(LS,
-                "Can only add NPCs as pets.");
-    else if (ud_ch->pet)
-        luaL_error(LS,
-                "%s already has a pet.", ud_ch->name);
-    else if (IS_AFFECTED(pet, AFF_CHARM))
-        luaL_error(LS,
-                "%s is already charmed.", pet->name);
-
-    SET_BIT(pet->act, ACT_PET);
-    SET_BIT(pet->affect_field, AFF_CHARM);
-    flag_clear( pet->penalty );
-    SET_BIT( pet->penalty, PENALTY_NOTELL );
-    SET_BIT( pet->penalty, PENALTY_NOSHOUT );
-    SET_BIT( pet->penalty, PENALTY_NOCHANNEL );
-    add_follower( pet, ud_ch );
-    pet->leader = ud_ch;
-    ud_ch->pet = pet;
-
-    return 0;
 }
 
 static int CH_get_id ( lua_State *LS )
@@ -4534,6 +4133,7 @@ static int CH_get_descriptor( lua_State *LS )
 #endif
 static const LUA_PROP_TYPE CH_get_table [] =
 {
+#if 0
     CHGET(name, 0),
     CHGET(level, 0),
     CHGET(hp, 0),
@@ -4542,7 +4142,6 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(maxmana, 0),
     CHGET(move, 0),
     CHGET(maxmove, 0),
-#if 0
     CHGET(gold, 0),
     CHGET(silver, 0),
     CHGET(money, 0),
@@ -7456,28 +7055,31 @@ static int PROG_get_security ( lua_State *LS )
             (check_PROG( LS, 1) )->security);
     return 1;
 }
-
-static const LUA_PROP_TYPE PROG_get_table [] =
+#endif
+static const LUA_PROP_TYPE MPROG_get_table [] =
 {
+#if 0
     PROGGET( islua, 0),
     PROGGET( vnum, 0),
     PROGGET( code, 0),
     PROGGET( security, 0),
+#endif
     ENDPTABLE
 };
 
-static const LUA_PROP_TYPE PROG_set_table [] =
+static const LUA_PROP_TYPE MPROG_set_table [] =
 {
     ENDPTABLE
 };
 
-static const LUA_PROP_TYPE PROG_method_table [] =
+static const LUA_PROP_TYPE MPROG_method_table [] =
 {
     ENDPTABLE
 };
 /* end PROG section */
 
 /* TRIG section */
+#if 0
 static int TRIG_get_trigtype ( lua_State *LS )
 {
     const struct flag_type *tbl;
@@ -7553,27 +7155,28 @@ static int TRIG_get_prog ( lua_State *LS )
     return 0;
 }    
 
-
-static const LUA_PROP_TYPE TRIG_get_table [] =
+#endif
+static const LUA_PROP_TYPE MTRIG_get_table [] =
 {
+#if 0
     TRIGGET( trigtype, 0),
     TRIGGET( trigphrase, 0),
     TRIGGET( prog, 0),
+#endif
     ENDPTABLE
 };
 
-static const LUA_PROP_TYPE TRIG_set_table [] =
+static const LUA_PROP_TYPE MTRIG_set_table [] =
 {
     ENDPTABLE
 };
 
-static const LUA_PROP_TYPE TRIG_method_table [] =
+static const LUA_PROP_TYPE MTRIG_method_table [] =
 {
     ENDPTABLE
 };
 
 /* end TRIG section */
-#endif
 
 #if 0
 /* HELP section */
@@ -8133,7 +7736,6 @@ LUA_OBJ_TYPE LTYPE ## _type = { \
 };
 
 #define DECLARETYPE( LTYPE, CTYPE ) declb( LTYPE, CTYPE, LTYPE )
-#define DECLARETRIG( LTYPE, CTYPE ) declb( LTYPE, CTYPE, TRIG ) 
 
 DECLARETYPE( CH, CHAR_DATA );
 DECLARETYPE( OBJ, OBJ_DATA );
@@ -8145,17 +7747,7 @@ DECLARETYPE( OBJPROTO, OBJ_INDEX_DATA );
 DECLARETYPE( MOBPROTO, MOB_INDEX_DATA );
 DECLARETYPE( SHOP, SHOP_DATA );
 DECLARETYPE( AFFECT, AFFECT_DATA );
-/*
-DECLARETYPE( PROG, PROG_CODE );
-
-DECLARETRIG( MTRIG, PROG_LIST );
-DECLARETRIG( OTRIG, PROG_LIST );
-DECLARETRIG( ATRIG, PROG_LIST );
-DECLARETRIG( RTRIG, PROG_LIST );
-*/
+DECLARETYPE( MPROG, MPROG_CODE );
+DECLARETYPE( MTRIG, MPROG_LIST );
 DECLARETYPE( HELP, HELP_DATA );
 DECLARETYPE( DESCRIPTOR, DESCRIPTOR_DATA );
-/*
-DECLARETYPE( BOSSACHV, BOSSACHV );
-DECLARETYPE( BOSSREC, BOSSREC );
-*/

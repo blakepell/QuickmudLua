@@ -340,7 +340,7 @@ void load_mobiles (FILE * fp)
                 char *word;
                 int trigger = 0;
 
-                pMprog = alloc_perm (sizeof (*pMprog));
+                pMprog = alloc_MPROG();
                 word = fread_word (fp);
                 if ((trigger = flag_lookup (word, mprog_flags)) == NO_FLAG)
                 {

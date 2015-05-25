@@ -570,23 +570,13 @@ char *buf_string (BUFFER * buffer)
     return buffer->string;
 }
 
-/* stuff for recycling mobprograms */
-MPROG_LIST *mprog_free;
-
 MPROG_LIST *new_mprog (void)
 {
     static MPROG_LIST mp_zero;
     MPROG_LIST *mp;
 
-    if (mprog_free == NULL)
-        mp = alloc_perm (sizeof (*mp));
-    else
-    {
-        mp = mprog_free;
-        mprog_free = mprog_free->next;
-    }
+    mp = alloc_MTRIG();
 
-    *mp = mp_zero;
     mp->vnum = 0;
     mp->trig_type = 0;
     mp->code = str_dup ("");
@@ -600,8 +590,8 @@ void free_mprog (MPROG_LIST * mp)
         return;
 
     INVALIDATE (mp);
-    mp->next = mprog_free;
-    mprog_free = mp;
+    mp->next = NULL;
+    free_MTRIG(mp);
 }
 
 HELP_AREA *had_free;

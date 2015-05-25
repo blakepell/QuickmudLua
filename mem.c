@@ -379,22 +379,12 @@ void free_mob_index (MOB_INDEX_DATA * pMob)
     return;
 }
 
-MPROG_CODE *mpcode_free;
-
 MPROG_CODE *new_mpcode (void)
 {
     MPROG_CODE *NewCode;
 
-    if (!mpcode_free)
-    {
-        NewCode = alloc_perm (sizeof (*NewCode));
-        top_mprog_index++;
-    }
-    else
-    {
-        NewCode = mpcode_free;
-        mpcode_free = mpcode_free->next;
-    }
+    NewCode = alloc_MPROG();
+    top_mprog_index++;
 
     NewCode->vnum = 0;
     NewCode->code = str_dup ("");
@@ -406,7 +396,7 @@ MPROG_CODE *new_mpcode (void)
 void free_mpcode (MPROG_CODE * pMcode)
 {
     free_string (pMcode->code);
-    pMcode->next = mpcode_free;
-    mpcode_free = pMcode;
+    pMcode->next = NULL;
+    free_MPROG(pMcode);
     return;
 }

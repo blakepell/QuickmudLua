@@ -48,7 +48,7 @@ extern LUA_OBJ_TYPE RESET_type;
 extern LUA_OBJ_TYPE OBJPROTO_type;
 extern LUA_OBJ_TYPE MOBPROTO_type;
 extern LUA_OBJ_TYPE SHOP_type;
-extern LUA_OBJ_TYPE PROG_type;
+extern LUA_OBJ_TYPE MPROG_type;
 extern LUA_OBJ_TYPE MTRIG_type;
 extern LUA_OBJ_TYPE OTRIG_type;
 extern LUA_OBJ_TYPE ATRIG_type;
