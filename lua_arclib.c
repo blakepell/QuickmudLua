@@ -5594,7 +5594,6 @@ static const LUA_PROP_TYPE MOBPROTO_method_table [] =
 
 /* end MOBPROTO section */
 
-#if 0
 /* SHOP section */
 #define SHOPGETINT( lfield, cfield ) static int SHOP_get_ ## lfield ( lua_State *LS )\
 {\
@@ -5650,16 +5649,13 @@ static int SHOP_buytype ( lua_State *LS )
     return 1;
 }
        
-#endif
 static const LUA_PROP_TYPE SHOP_get_table [] =
 {
-#if 0
     SHOPGET( keeper, 0),
     SHOPGET( profitbuy, 0),
     SHOPGET( profitsell, 0),
     SHOPGET( openhour, 0),
     SHOPGET( closehour, 0),
-#endif
     ENDPTABLE
 };
 
@@ -5670,7 +5666,7 @@ static const LUA_PROP_TYPE SHOP_set_table [] =
 
 static const LUA_PROP_TYPE SHOP_method_table [] =
 {
-    //SHOPMETH( buytype, 0), 
+    SHOPMETH( buytype, 0),
     ENDPTABLE
 };
 /* end SHOP section */
@@ -5739,15 +5735,6 @@ static int AFFECT_get_modifier ( lua_State *LS )
     return 1;
 }
 
-static int AFFECT_get_detectlevel ( lua_State *LS )
-{
-    AFFECT_DATA *ud_af=check_AFFECT(LS,1);
-
-    lua_pushinteger( LS,
-            ud_af->detect_level);
-    return 1;
-}
-
 static int AFFECT_get_bitvector ( lua_State *LS )
 {
     AFFECT_DATA *ud_af=check_AFFECT(LS,1);
@@ -5785,17 +5772,6 @@ static int AFFECT_get_bitvector ( lua_State *LS )
         default:
             luaL_error( LS, "Invalid where." );
     }
-    return 1;
-}
-
-static int AFFECT_get_tag ( lua_State *LS )
-{
-    AFFECT_DATA *ud_af=check_AFFECT(LS,1);
-
-    if (ud_af->type != gsn_custom_affect)
-        luaL_error(LS, "Can only get tag for custom_affect type.");
-
-    lua_pushstring( LS, ud_af->tag);
     return 1;
 }
 
