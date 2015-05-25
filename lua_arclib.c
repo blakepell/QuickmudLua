@@ -5895,7 +5895,6 @@ static const LUA_PROP_TYPE MTRIG_method_table [] =
 
 /* end TRIG section */
 
-#if 0
 /* HELP section */
 static int HELP_get_level( lua_State *LS )
 {
@@ -5915,21 +5914,11 @@ static int HELP_get_text( lua_State *LS )
     return 1;
 }
 
-static int HELP_get_delete( lua_State *LS )
-{
-    lua_pushboolean( LS, check_HELP( LS, 1 )->delete );
-    return 1;
-}
-
-#endif
 static const LUA_PROP_TYPE HELP_get_table [] =
 {
-#if 0
     GETP( HELP, level, 0 ),
     GETP( HELP, keywords, 0 ),
     GETP( HELP, text, 0 ),
-    GETP( HELP, delete, 0 ),
-#endif
     ENDPTABLE
 };
 
