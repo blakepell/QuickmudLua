@@ -4665,16 +4665,8 @@ static const LUA_PROP_TYPE AREA_method_table [] =
 
 /* end AREA section */
 
-#if 0
 /* ROOM section */
-static int ROOM_rvnum ( lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
-    lua_remove(LS,1);
-
-    return L_rvnum( LS, ud_room->area );
-}
-
+/*
 static int ROOM_loadfunction ( lua_State *LS)
 {
     lua_room_program( NULL, RUNDELAY_VNUM, NULL,
@@ -4682,7 +4674,7 @@ static int ROOM_loadfunction ( lua_State *LS)
                 NULL, NULL, NULL, NULL,
                 TRIG_CALL, 0 );
     return 0;
-}
+}*/
 
 static int ROOM_mload (lua_State *LS)
 {
@@ -4694,7 +4686,6 @@ static int ROOM_mload (lua_State *LS)
         luaL_error(LS, "No mob with vnum: %d", num);
 
     CHAR_DATA *mob=create_mobile( pObjIndex);
-    arm_npc( mob );
     char_to_room(mob,ud_room);
 
     if ( !push_CH(LS, mob))
@@ -4713,8 +4704,7 @@ static int ROOM_oload (lua_State *LS)
     if (!pObjIndex)
         luaL_error(LS, "No object with vnum: %d", num);
 
-    OBJ_DATA *obj = create_object(pObjIndex);
-    check_enchant_obj( obj );
+    OBJ_DATA *obj = create_object(pObjIndex,0);
     obj_to_room(obj,ud_room);
 
     if ( !push_OBJ(LS, obj) )
@@ -4733,12 +4723,6 @@ static int ROOM_flag( lua_State *LS)
 static int ROOM_reset( lua_State *LS)
 {
     reset_room( check_ROOM(LS,1) );
-    return 0;
-}
-
-static int ROOM_purge( lua_State *LS)
-{
-    purge_room( check_ROOM(LS,1) );
     return 0;
 }
 
@@ -4777,7 +4761,7 @@ static int ROOM_tprint ( lua_State *LS)
 
     return 0;
 }
-
+#if 0
 static int ROOM_savetbl (lua_State *LS)
 {
     ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
@@ -4849,16 +4833,7 @@ static int ROOM_loadprog (lua_State *LS)
                 RTRIG_CALL, 0) );
     return 1;
 }
-
-static int ROOM_delay (lua_State *LS)
-{
-    return L_delay(LS);
-}
-
-static int ROOM_cancel (lua_State *LS)
-{
-    return L_cancel(LS);
-}
+#endif
 
 static int ROOM_get_name (lua_State *LS)
 {
@@ -4871,20 +4846,6 @@ static int ROOM_get_vnum (lua_State *LS)
 {
     lua_pushinteger( LS,
             (check_ROOM(LS,1))->vnum);
-    return 1;
-}
-
-static int ROOM_get_clan (lua_State *LS)
-{
-    lua_pushstring( LS,
-            clan_table[check_ROOM(LS,1)->clan].name);
-    return 1;
-}
-
-static int ROOM_get_clanrank (lua_State *LS)
-{
-    lua_pushinteger( LS,
-            (check_ROOM(LS,1))->clan_rank);
     return 1;
 }
 
@@ -5020,10 +4981,6 @@ ROOM_dir(north, DIR_NORTH)
 ROOM_dir(south, DIR_SOUTH)
 ROOM_dir(east, DIR_EAST)
 ROOM_dir(west, DIR_WEST)
-ROOM_dir(northeast, DIR_NORTHEAST)
-ROOM_dir(northwest, DIR_NORTHWEST)
-ROOM_dir(southeast, DIR_SOUTHEAST)
-ROOM_dir(southwest, DIR_SOUTHWEST)
 ROOM_dir(up, DIR_UP)
 ROOM_dir(down, DIR_DOWN)
 
@@ -5041,29 +4998,10 @@ static int ROOM_get_resets (lua_State *LS)
     return 1;
 }
 
-static int ROOM_get_rtrigs ( lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM( LS, 1);
-    PROG_LIST *rtrig;
-
-    int index=1;
-    lua_newtable( LS );
-
-    for ( rtrig = ud_room->rprogs ; rtrig ; rtrig = rtrig->next )
-    {
-        if (push_RTRIG( LS, rtrig) )
-            lua_rawseti(LS, -2, index++);
-    }
-    return 1;
-}
-#endif
 static const LUA_PROP_TYPE ROOM_get_table [] =
 {
-#if 0
     ROOMGET(name, 0),
     ROOMGET(vnum, 0),
-    ROOMGET(clan, 0),
-    ROOMGET(clanrank, 0),
     ROOMGET(healrate, 0),
     ROOMGET(manarate, 0),
     ROOMGET(owner, 0),
@@ -5079,15 +5017,9 @@ static const LUA_PROP_TYPE ROOM_get_table [] =
     ROOMGET(south, 0),
     ROOMGET(east, 0),
     ROOMGET(west, 0),
-    ROOMGET(northwest, 0),
-    ROOMGET(northeast, 0),
-    ROOMGET(southwest, 0),
-    ROOMGET(southeast, 0),
     ROOMGET(up, 0),
     ROOMGET(down, 0),
     ROOMGET(resets, 0),
-    ROOMGET(rtrigs, 0),
-#endif
     ENDPTABLE
 };
 
@@ -5098,24 +5030,18 @@ static const LUA_PROP_TYPE ROOM_set_table [] =
 
 static const LUA_PROP_TYPE ROOM_method_table [] =
 {
-#if 0
     ROOMMETH(flag, 0),
     ROOMMETH(reset, 5),
-    ROOMMETH(purge, 5),
     ROOMMETH(oload, 1),
     ROOMMETH(mload, 1),
     ROOMMETH(echo, 1),
-    ROOMMETH(loadprog, 1),
-    ROOMMETH(loadscript, 1),
-    ROOMMETH(loadstring, 1),
-    ROOMMETH(loadfunction, 1),
+    //ROOMMETH(loadprog, 1),
+    //ROOMMETH(loadscript, 1),
+    //ROOMMETH(loadstring, 1),
+    //ROOMMETH(loadfunction, 1),
     ROOMMETH(tprint, 1),
-    ROOMMETH(delay, 1),
-    ROOMMETH(cancel, 1),
-    ROOMMETH(savetbl, 1),
-    ROOMMETH(loadtbl, 1),
-    ROOMMETH(rvnum, 1),
-#endif
+    //ROOMMETH(savetbl, 1),
+    //ROOMMETH(loadtbl, 1),
     ENDPTABLE
 }; 
 
