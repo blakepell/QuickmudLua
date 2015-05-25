@@ -5121,7 +5121,6 @@ static const LUA_PROP_TYPE ROOM_method_table [] =
 
 /* end ROOM section */
 
-#if 0
 /* EXIT section */
 static int EXIT_flag (lua_State *LS)
 {
@@ -5221,15 +5220,13 @@ static int EXIT_get_key (lua_State *LS)
             (check_EXIT(LS,1))->key);
     return 1;
 }
-#endif
+
 static const LUA_PROP_TYPE EXIT_get_table [] =
 {
-#if 0
     EXGET(toroom, 0),
     EXGET(keyword,0),
     EXGET(description, 0),
     EXGET(key, 0),
-#endif
     ENDPTABLE
 };
 
@@ -5240,14 +5237,12 @@ static const LUA_PROP_TYPE EXIT_set_table [] =
 
 static const LUA_PROP_TYPE EXIT_method_table [] =
 {
-#if 0
     EXMETH(flag, 0),
     EXMETH(setflag, 0),
     EXMETH(open, 0),
     EXMETH(close, 0),
     EXMETH(unlock, 0),
     EXMETH(lock, 0),
-#endif
     ENDPTABLE
 }; 
 
