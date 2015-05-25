@@ -5671,7 +5671,6 @@ static const LUA_PROP_TYPE SHOP_method_table [] =
 };
 /* end SHOP section */
 
-#if 0
 /* AFFECT section */
 static int AFFECT_get_where ( lua_State *LS )
 {
@@ -5750,9 +5749,9 @@ static int AFFECT_get_bitvector ( lua_State *LS )
                     flag_bit_name( extra_flags, ud_af->bitvector ) ); 
             break;
         case TO_WEAPON:
-            /* tbc, make it return table of flags */
+            /* TODO: make it return table of flags */
             lua_pushstring(LS,
-                    i_flag_bits_name( weapon_type2, ud_af->bitvector ) );
+                    flag_string( weapon_type2, ud_af->bitvector ) );
             break;
         case TO_IMMUNE:
             lua_pushstring(LS,
@@ -5766,19 +5765,14 @@ static int AFFECT_get_bitvector ( lua_State *LS )
             lua_pushstring(LS,
                     flag_bit_name( vuln_flags, ud_af->bitvector ) );
             break;
-        case TO_SPECIAL:
-            lua_pushinteger( LS, ud_af->bitvector );
-            break;
         default:
             luaL_error( LS, "Invalid where." );
     }
     return 1;
 }
 
-#endif
 static const LUA_PROP_TYPE AFFECT_get_table [] =
 {
-#if 0
     AFFGET( where, 0),
     AFFGET( type, 0),
     AFFGET( level, 0),
@@ -5786,9 +5780,6 @@ static const LUA_PROP_TYPE AFFECT_get_table [] =
     AFFGET( location, 0),
     AFFGET( modifier, 0),
     AFFGET( bitvector, 0),
-    AFFGET( detectlevel, 0),
-    AFFGET( tag, 0),
-#endif
     ENDPTABLE
 };
 
