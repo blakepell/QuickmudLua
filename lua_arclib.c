@@ -3652,61 +3652,14 @@ static const LUA_PROP_TYPE OBJ_method_table [] =
 
 /* end OBJ section */
 
-#if 0
 /* AREA section */
-static int AREA_rvnum ( lua_State *LS)
-{
-    AREA_DATA *ud_area = check_AREA(LS, 1);
-    lua_remove(LS,1);
-
-    return L_rvnum( LS, ud_area );
-}
-
+#if 0
 static int AREA_loadfunction( lua_State *LS)
 {
     lua_area_program( NULL, RUNDELAY_VNUM, NULL,
                 check_AREA(LS, -2), NULL,
                 TRIG_CALL, 0 );
     return 0;
-}
-
-static int AREA_delay (lua_State *LS)
-{
-    return L_delay(LS);
-}
-
-static int AREA_cancel (lua_State *LS)
-{
-    return L_cancel(LS);
-}
-
-static int AREA_savetbl (lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, SAVETABLE_FUNCTION);
-
-    /* Push original args into SaveTable */
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_pushstring( LS, ud_area->file_name );
-    lua_call( LS, 3, 0);
-
-    return 0;
-}
-
-static int AREA_loadtbl (lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, LOADTABLE_FUNCTION);
-
-    /* Push original args into LoadTable */
-    lua_pushvalue( LS, 2 );
-    lua_pushstring( LS, ud_area->file_name );
-    lua_call( LS, 2, 1);
-
-    return 1;
 }
 
 static int AREA_loadscript (lua_State *LS)
@@ -3753,6 +3706,8 @@ static int AREA_loadprog (lua_State *LS)
     return 1;
 }
 
+#endif
+
 static int AREA_flag( lua_State *LS)
 {
     AREA_DATA *ud_area = check_AREA(LS, 1);
@@ -3764,56 +3719,6 @@ static int AREA_reset( lua_State *LS)
     AREA_DATA *ud_area = check_AREA(LS,1);
     reset_area(ud_area);
     return 0;
-}
-
-static int AREA_purge( lua_State *LS)
-{
-    purge_area( check_AREA(LS,1) );
-    return 0;
-}
-
-static int AREA_echo( lua_State *LS)
-{
-    AREA_DATA *ud_area = check_AREA(LS, 1);
-    const char *argument = check_fstring( LS, 2, MSL);
-    DESCRIPTOR_DATA *d;
-
-    for ( d = descriptor_list; d; d = d->next )
-    {
-        if ( IS_PLAYING(d->connected) )
-        {
-            if ( !d->character->in_room )
-                continue;
-            if ( d->character->in_room->area != ud_area )
-                continue;
-
-            if ( IS_IMMORTAL(d->character) )
-                send_to_char( "Area echo> ", d->character );
-            send_to_char( argument, d->character );
-            send_to_char( "\n\r", d->character );
-        }
-    }
-
-    return 0;
-}
-
-static int AREA_tprint ( lua_State *LS)
-{
-    lua_getfield( LS, LUA_GLOBALSINDEX, TPRINTSTR_FUNCTION);
-
-    /* Push original arg into tprintstr */
-    lua_pushvalue( LS, 2);
-    lua_call( LS, 1, 1 );
-
-    lua_pushcfunction( LS, AREA_echo );
-    /* now line up arguments for echo */
-    lua_pushvalue( LS, 1); /* area */
-    lua_pushvalue( LS, -3); /* return from tprintstr */
-
-    lua_call( LS, 2, 0);
-
-    return 0;
-
 }
 
 static int AREA_get_name( lua_State *LS)
@@ -3831,18 +3736,6 @@ static int AREA_get_filename( lua_State *LS)
 static int AREA_get_nplayer( lua_State *LS)
 {
     lua_pushinteger( LS, (check_AREA(LS, 1))->nplayer);
-    return 1;
-}
-
-static int AREA_get_minlevel( lua_State *LS)
-{
-    lua_pushinteger( LS, (check_AREA(LS, 1))->minlevel);
-    return 1;
-}
-
-static int AREA_get_maxlevel( lua_State *LS)
-{
-    lua_pushinteger( LS, (check_AREA(LS, 1))->maxlevel);
     return 1;
 }
 
@@ -3964,84 +3857,14 @@ static int AREA_get_mprogs( lua_State *LS)
     int index=1;
     int vnum=0;
     lua_newtable(LS);
-    PROG_CODE *prog;
+    MPROG_CODE *prog;
     for ( vnum = ud_area->min_vnum ; vnum <= ud_area->max_vnum ; vnum++ )
     {
         if ((prog=get_mprog_index(vnum)) != NULL )
         {
-            if (push_PROG(LS, prog))
+            if (push_MPROG(LS, prog))
                 lua_rawseti(LS, -2, index++);
         }
-    }
-    return 1;
-}
-
-static int AREA_get_oprogs( lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS, 1);
-    int index=1;
-    int vnum=0;
-    lua_newtable(LS);
-    PROG_CODE *prog;
-    for ( vnum = ud_area->min_vnum ; vnum <= ud_area->max_vnum ; vnum++ )
-    {
-        if ((prog=get_oprog_index(vnum)) != NULL )
-        {
-            if (push_PROG(LS, prog))
-                lua_rawseti(LS, -2, index++);
-        }
-    }
-    return 1;
-}
-
-static int AREA_get_aprogs( lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS, 1);
-    int index=1;
-    int vnum=0;
-    lua_newtable(LS);
-    PROG_CODE *prog;
-    for ( vnum = ud_area->min_vnum ; vnum <= ud_area->max_vnum ; vnum++ )
-    {
-        if ((prog=get_aprog_index(vnum)) != NULL )
-        {
-            if (push_PROG(LS, prog))
-                lua_rawseti(LS, -2, index++);
-        }
-    }
-    return 1;
-}
-
-static int AREA_get_rprogs( lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS, 1);
-    int index=1;
-    int vnum=0;
-    lua_newtable(LS);
-    PROG_CODE *prog;
-    for ( vnum = ud_area->min_vnum ; vnum <= ud_area->max_vnum ; vnum++ )
-    {
-        if ((prog=get_rprog_index(vnum)) != NULL )
-        {
-            if (push_PROG(LS, prog))
-                lua_rawseti(LS, -2, index++);
-        }
-    }
-    return 1;
-}
-
-static int AREA_get_atrigs ( lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA( LS, 1);
-    PROG_LIST *atrig;
-
-    int index=1;
-    lua_newtable( LS );
-
-    for ( atrig = ud_area->aprogs ; atrig ; atrig = atrig->next )
-    {
-        if (push_ATRIG( LS, atrig) )
-            lua_rawseti(LS, -2, index++);
     }
     return 1;
 }
@@ -4080,15 +3903,12 @@ static int AREA_get_builders ( lua_State *LS)
             (check_AREA(LS,1))->builders);
     return 1;
 }
-#endif
+
 static const LUA_PROP_TYPE AREA_get_table [] =
 {
-#if 0
     AREAGET(name, 0),
     AREAGET(filename, 0),
     AREAGET(nplayer, 0),
-    AREAGET(minlevel, 0),
-    AREAGET(maxlevel, 0),
     AREAGET(security, 0),
     AREAGET(vnum, 0),
     AREAGET(minvnum, 0),
@@ -4102,11 +3922,6 @@ static const LUA_PROP_TYPE AREA_get_table [] =
     AREAGET(mobprotos, 0),
     AREAGET(objprotos, 0),
     AREAGET(mprogs, 0),
-    AREAGET(oprogs, 0),
-    AREAGET(aprogs, 0),
-    AREAGET(rprogs, 0),
-    AREAGET(atrigs, 0),
-#endif
     ENDPTABLE
 };
 
@@ -4117,22 +3932,12 @@ static const LUA_PROP_TYPE AREA_set_table [] =
 
 static const LUA_PROP_TYPE AREA_method_table [] =
 {
-#if 0
     AREAMETH(flag, 0),
-    AREAMETH(echo, 1),
     AREAMETH(reset, 5),
-    AREAMETH(purge, 5),
-    AREAMETH(loadprog, 1),
-    AREAMETH(loadscript, 1),
-    AREAMETH(loadstring, 1),
-    AREAMETH(loadfunction, 1),
-    AREAMETH(savetbl, 1),
-    AREAMETH(loadtbl, 1),
-    AREAMETH(tprint, 1),
-    AREAMETH(delay, 1),
-    AREAMETH(cancel, 1),
-    AREAMETH(rvnum, 1),
-#endif
+    //AREAMETH(loadprog, 1),
+    //AREAMETH(loadscript, 1),
+    //AREAMETH(loadstring, 1),
+    //AREAMETH(loadfunction, 1),
     ENDPTABLE
 }; 
 
