@@ -2022,33 +2022,6 @@ static int CH_echo (lua_State *LS)
     return 0;
 }
 
-static int CH_echoaround (lua_State *LS)
-{
-    if ( !is_CH(LS, 2) )
-    {
-        /* standard 'mob echoaround' syntax */
-        do_mpechoaround( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-        return 0;
-    }
-
-    mpechoaround( check_CH(LS, 1), check_CH(LS, 2), check_fstring( LS, 3, MIL) );
-
-    return 0;
-}
-
-static int CH_echoat (lua_State *LS)
-{
-    if ( lua_isnone(LS, 3) )
-    {
-        /* standard 'mob echoat' syntax */
-        do_mpechoat( check_CH(LS, 1), check_string(LS, 2, MIL));
-        return 0;
-    }
-
-    mpechoat( check_CH(LS, 1), check_CH(LS, 2), check_fstring( LS, 3, MIL) );
-    return 0;
-}
-
 static int CH_purge (lua_State *LS)
 {
     // Send empty string for no argument
@@ -2088,22 +2061,6 @@ static int CH_at (lua_State *LS)
 {
 
     do_mpat( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_transfer (lua_State *LS)
-{
-
-    do_mptransfer( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_gtransfer (lua_State *LS)
-{
-
-    do_mpgtransfer( check_CH(LS, 1), check_fstring( LS, 2, MIL));
 
     return 0;
 }
@@ -2383,7 +2340,6 @@ static int CH_carries (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_string( LS, 2, MIL);
-    int count=0;
 
     if ( is_number( argument ) )
     {
@@ -2669,7 +2625,6 @@ static int CH_skilled (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_string( LS, 2, MIL);
-    bool prac=FALSE;
 
     int sn=skill_lookup(argument);
     if (sn==-1)
