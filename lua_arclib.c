@@ -5299,19 +5299,7 @@ static const LUA_PROP_TYPE RESET_method_table [] =
 
 /* end RESET section */
 
-#if 0
 /* OBJPROTO section */
-static int OBJPROTO_adjustdamage( lua_State *LS)
-{
-
-    OBJ_INDEX_DATA *ud_objp = check_OBJPROTO(LS, 1);
-    if ( ud_objp->item_type != ITEM_WEAPON )
-        luaL_error( LS, "adjustdamage for weapon only");
-
-    lua_pushboolean( LS, adjust_weapon_dam( ud_objp ) );
-    return 1;
-}
-
 static int OBJPROTO_wear( lua_State *LS)
 {
     OBJ_INDEX_DATA *ud_objp = check_OBJPROTO(LS, 1);
@@ -5342,20 +5330,6 @@ static int OBJPROTO_get_description (lua_State *LS)
 {
     lua_pushstring( LS,
             (check_OBJPROTO(LS,1))->description);
-    return 1;
-}
-
-static int OBJPROTO_get_clan (lua_State *LS)
-{
-    lua_pushstring( LS,
-            clan_table[(check_OBJPROTO(LS,1))->clan].name);
-    return 1;
-}
-
-static int OBJPROTO_get_clanrank (lua_State *LS)
-{
-    lua_pushinteger( LS,
-            (check_OBJPROTO(LS,1))->rank);
     return 1;
 }
 
@@ -5421,22 +5395,6 @@ static int OBJPROTO_get_area ( lua_State *LS )
     return 0;
 }
 
-static int OBJPROTO_get_otrigs ( lua_State *LS)
-{
-    OBJ_INDEX_DATA *ud_oid=check_OBJPROTO( LS, 1);
-    PROG_LIST *otrig;
-
-    int index=1;
-    lua_newtable( LS );
-
-    for ( otrig = ud_oid->oprogs ; otrig ; otrig = otrig->next )
-    {
-        if (push_OTRIG( LS, otrig) )
-            lua_rawseti(LS, -2, index++);
-    }
-    return 1;
-}
-
 static int OBJPROTO_get_affects ( lua_State *LS)
 {
     OBJ_INDEX_DATA *ud_oid=check_OBJPROTO( LS, 1);
@@ -5453,48 +5411,28 @@ static int OBJPROTO_get_affects ( lua_State *LS)
     return 1;
 }
 
-static int OBJPROTO_get_rating ( lua_State *LS)
-{
-    OBJ_INDEX_DATA *ud_oid=check_OBJPROTO( LS, 1);
-
-    lua_pushinteger( LS,
-            ud_oid->diff_rating);
-
-    return 1;
-}
-#endif
 static const LUA_PROP_TYPE OBJPROTO_get_table [] =
 {
-#if 0
     OPGET( name, 0),
     OPGET( shortdescr, 0),
     OPGET( description, 0),
-    OPGET( clan, 0),
-    OPGET( clanrank, 0),
     OPGET( level, 0),
     OPGET( cost, 0),
     OPGET( material, 0),
     OPGET( vnum, 0),
     OPGET( otype, 0),
     OPGET( weight, 0),
-    OPGET( rating, 0),
     OPGET( v0, 0),
     OPGET( v1, 0),
     OPGET( v2, 0),
     OPGET( v3, 0),
     OPGET( v4, 0),
     OPGET( area, 0),
-    OPGET( otrigs, 0),
     OPGET( affects, 0),
 
     /*light*/
     OPGET(light, 0),
 
-    /*arrows*/
-    OPGET(arrowcount, 0),
-    OPGET(arrowdamage, 0),
-    OPGET(arrowdamtype, 0),
-    
     /* wand, staff */
     OPGET(spelllevel, 0),
     OPGET(chargestotal, 0),
@@ -5523,7 +5461,6 @@ static const LUA_PROP_TYPE OBJPROTO_get_table [] =
     OPGET( numdice, 0),
     OPGET( dicetype, 0),
     OPGET( attacktype, 0),
-    OPGET( damtype, 0),
     OPGET( damnoun, 0),
 
     /* container */
@@ -5552,7 +5489,6 @@ static const LUA_PROP_TYPE OBJPROTO_get_table [] =
     /* money */
     OPGET( silver, 0),
     OPGET( gold, 0),
-#endif
 
     ENDPTABLE
 };
@@ -5564,7 +5500,6 @@ static const LUA_PROP_TYPE OBJPROTO_set_table [] =
 
 static const LUA_PROP_TYPE OBJPROTO_method_table [] =
 {
-#if 0
     OPMETH( extra, 0),
     OPMETH( wear, 0),
     OPMETH( apply, 0),
@@ -5578,23 +5513,20 @@ static const LUA_PROP_TYPE OBJPROTO_method_table [] =
     
     /* weapon only */
     OPMETH(weaponflag, 0),
-    OPMETH(adjustdamage, 9),
     
     /* container only */
     OPMETH(containerflag, 0),
     
-#endif
     ENDPTABLE
 }; 
 
 /* end OBJPROTO section */
 
-#if 0
 /* MOBPROTO section */
 static int MOBPROTO_affected (lua_State *LS)
 {
     MOB_INDEX_DATA *ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "affected", affect_flags, ud_mobp->affect_field );
+    return check_flag( LS, "affected", affect_flags, ud_mobp->affected_by );
 }
 
 static int MOBPROTO_act (lua_State *LS)
@@ -5655,13 +5587,6 @@ MPGETSTR( longdescr, ud_mobp->long_descr,"" ,"");
 MPGETSTR( description, ud_mobp->description, "", "");
 MPGETINT( alignment, ud_mobp->alignment,"" ,"");
 MPGETINT( level, ud_mobp->level,"" ,"");
-MPGETINT( hppcnt, ud_mobp->hitpoint_percent,"" ,"");
-MPGETINT( mnpcnt, ud_mobp->mana_percent,"" ,"");
-MPGETINT( mvpcnt, ud_mobp->move_percent,"" ,"");
-MPGETINT( hrpcnt, ud_mobp->hitroll_percent,"" ,"");
-MPGETINT( drpcnt, ud_mobp->damage_percent,"" ,"");
-MPGETINT( acpcnt, ud_mobp->ac_percent,"" ,"");
-MPGETINT( savepcnt, ud_mobp->saves_percent,"" ,"");
 MPGETSTR( damtype, attack_table[ud_mobp->dam_type].name,"" ,"");
 MPGETSTR( startpos, flag_bit_name(position_flags, ud_mobp->start_pos),"" ,"");
 MPGETSTR( defaultpos, flag_bit_name(position_flags, ud_mobp->default_pos),"" ,"");
@@ -5669,14 +5594,9 @@ MPGETSTR( sex,
     ud_mobp->sex == SEX_NEUTRAL ? "neutral" :
     ud_mobp->sex == SEX_MALE    ? "male" :
     ud_mobp->sex == SEX_FEMALE  ? "female" :
-    ud_mobp->sex == SEX_BOTH    ? "random" :
     NULL,"" ,"");
 MPGETSTR( race, race_table[ud_mobp->race].name,"" ,"");
-MPGETINT( wealthpcnt, ud_mobp->wealth_percent,"" ,"");
 MPGETSTR( size, flag_bit_name(size_flags, ud_mobp->size),"" ,"");
-MPGETSTR( stance, stances[ud_mobp->stance].name,
-    "Mob's default stance." ,
-    "See 'stances' table.");
 MPGETINT( count, ud_mobp->count, "", "");
 
 static int MOBPROTO_get_area (lua_State *LS)
@@ -5689,7 +5609,7 @@ static int MOBPROTO_get_area (lua_State *LS)
 static int MOBPROTO_get_mtrigs ( lua_State *LS)
 {
     MOB_INDEX_DATA *ud_mid=check_MOBPROTO( LS, 1);
-    PROG_LIST *mtrig;
+    MPROG_LIST *mtrig;
     
     int index=1;
     lua_newtable( LS );
@@ -5716,24 +5636,8 @@ static int MOBPROTO_get_shop ( lua_State *LS)
         return 0;
 }
 
-static int MOBPROTO_get_bossachv ( lua_State *LS)
-{
-    MOB_INDEX_DATA *ud_mid=check_MOBPROTO( LS, 1);
-    if ( ud_mid->boss_achieve )
-    {
-        if ( push_BOSSACHV(LS, ud_mid->boss_achieve) )
-            return 1;
-        else
-            return 0;
-    }
-    else
-        return 0;
-}
-
-#endif
 static const LUA_PROP_TYPE MOBPROTO_get_table [] =
 {
-#if 0
     MPGET( vnum, 0),
     MPGET( name, 0),
     MPGET( shortdescr, 0),
@@ -5741,27 +5645,16 @@ static const LUA_PROP_TYPE MOBPROTO_get_table [] =
     MPGET( description, 0),
     MPGET( alignment, 0),
     MPGET( level, 0),
-    MPGET( hppcnt, 0),
-    MPGET( mnpcnt, 0),
-    MPGET( mvpcnt, 0),
-    MPGET( hrpcnt, 0),
-    MPGET( drpcnt, 0),
-    MPGET( acpcnt, 0),
-    MPGET( savepcnt, 0),
     MPGET( damtype, 0),
     MPGET( startpos, 0),
     MPGET( defaultpos, 0),
     MPGET( sex, 0),
     MPGET( race, 0),
-    MPGET( wealthpcnt, 0),
     MPGET( size, 0),
-    MPGET( stance, 0),
     MPGET( area, 0),
     MPGET( mtrigs, 0),
     MPGET( shop, 0),
-    MPGET( bossachv, 0),
     MPGET( count,0),
-#endif
     ENDPTABLE
 };
 
@@ -5772,14 +5665,12 @@ static const LUA_PROP_TYPE MOBPROTO_set_table [] =
 
 static const LUA_PROP_TYPE MOBPROTO_method_table [] =
 {
-#if 0
     MPMETH( act, 0),
     MPMETH( vuln, 0),
     MPMETH( immune, 0),
     MPMETH( offensive, 0),
     MPMETH( resist, 0),
     MPMETH( affected, 0),
-#endif
     ENDPTABLE
 }; 
 
