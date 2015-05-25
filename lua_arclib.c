@@ -1412,193 +1412,10 @@ void register_globals( lua_State *LS )
 /* end global section */
 
 /* common section */
-#if 0
-LUA_EXTRA_VAL *new_luaval( int type, const char *name, const char *val, bool persist )
-{
-    LUA_EXTRA_VAL *new=alloc_mem(sizeof(LUA_EXTRA_VAL));
-    new->type=type;
-    new->name=name;
-    new->val=val;
-    new->persist=persist;
-
-    return new;
-}
-
-void free_luaval( LUA_EXTRA_VAL *luaval)
-{
-    free_string(luaval->name);
-    free_string(luaval->val);
-
-    free_mem(luaval, sizeof(LUA_EXTRA_VAL) );
-}
-
-static void push_luaval( lua_State *LS, LUA_EXTRA_VAL *luaval )
-{
-    switch(luaval->type)
-    {
-        case LUA_TSTRING:
-            lua_pushstring(LS, luaval->val);
-            return;
-
-        case LUA_TNUMBER:
-            lua_getglobal( LS, "tonumber");
-            lua_pushstring(LS, luaval->val);
-            lua_call( LS, 1, 1 );
-            return;
-
-        case LUA_TBOOLEAN:
-            lua_pushboolean( LS, !strcmp( luaval->val, "true" ) );
-            return;
-
-        default:
-            luaL_error(LS, "Invalid type '%s'",
-                    lua_typename( LS, luaval->type) );
-    }
-}
-
-static int get_luaval( lua_State *LS, LUA_EXTRA_VAL **luavals )
-{
-    if (lua_isnone( LS, 1 ) )
-    {
-        /* no argument, send a table of all vals */
-        lua_newtable( LS );
-        LUA_EXTRA_VAL *luaval;
-
-        for (luaval=*luavals; luaval; luaval=luaval->next)
-        {
-            lua_pushstring( LS, luaval->name);
-            push_luaval( LS, luaval );
-            lua_rawset( LS, -3 );
-        }
-        return 1;
-    }
-
-    const char *name=check_string(LS, 1, MIL );
-
-    LUA_EXTRA_VAL *luaval;
-
-    for ( luaval=*luavals; luaval; luaval=luaval->next )
-    {
-        if (!strcmp( name, luaval->name) )
-        {
-            push_luaval( LS, luaval );
-            return 1;
-        }
-    }
-
-    lua_pushnil( LS );
-    return 1;
-}
-
-static int set_luaval( lua_State *LS, LUA_EXTRA_VAL **luavals )
-{
-    const char *name=check_string(LS, 1, MIL );
-    int type=lua_type(LS, 2 );
-    const char *val;
-    bool persist=FALSE;
-    if (!lua_isnone(LS,3))
-    {
-        persist=lua_toboolean(LS, 3);
-        lua_remove(LS,3);
-    }
-
-    switch(type)
-    {
-        case LUA_TNONE:
-        case LUA_TNIL:
-            /* just break 
-               clear value lower down if it's already set,
-               otherwise do nothing 
-             */
-            val = NULL;
-            break;
-
-        case LUA_TSTRING:
-        case LUA_TNUMBER:
-            val=check_string(LS, 2, MIL );
-            break;
-
-        case LUA_TBOOLEAN:
-            lua_getglobal( LS, "tostring");
-            lua_insert( LS, -2 );
-            lua_call( LS, 1, 1 );
-            val=check_string( LS, 2, MIL );
-            break;
-
-        default:
-            return luaL_error( LS, "Cannot set value type '%s'.",
-                    lua_typename( LS, type ) );
-    }
-
-    LUA_EXTRA_VAL *luaval;
-    LUA_EXTRA_VAL *prev=NULL;
-    LUA_EXTRA_VAL *luaval_next=NULL;
-
-    for ( luaval=*luavals; luaval; luaval=luaval_next )
-    {
-        luaval_next=luaval->next;
-
-        if (!strcmp( name, luaval->name) )
-        {
-            /* sending nil as 2nd arg actually comes through
-               as "no value" (LUA_TNONE) for whatever reason*/
-            if ( type == LUA_TNONE || type == LUA_TNIL)
-            {
-                if (prev)
-                {
-                    prev->next=luaval->next;
-                }
-                else
-                {
-                    /* top of the list */
-                    *luavals=luaval->next;
-                }
-                free_luaval(luaval);
-                return 0;
-            }
-            
-            free_string( luaval->val );
-            luaval->val = str_dup(smash_tilde_cc(val));
-            luaval->type = type;
-            luaval->persist= persist;
-            return 0;
-        }
-
-        prev=luaval;
-    }
-    
-    if ( type != LUA_TNONE && type != LUA_TNIL )
-    {        
-        luaval=new_luaval( 
-                type, 
-                str_dup( name ), 
-                str_dup( smash_tilde_cc(val) ),
-                persist );
-        luaval->next = *luavals;
-        *luavals     = luaval;
-    }
-    return 0;
-}
-
-static int L_rvnum( lua_State *LS, AREA_DATA *area )
-{
-    if (!area)
-        luaL_error(LS, "NULL area in L_rvnum.");
-
-    int nr=luaL_checkinteger(LS,1);
-    int vnum=area->min_vnum + nr;
-
-    if ( vnum < area->min_vnum || vnum > area->max_vnum )
-        luaL_error(LS, "Rvnum %d (%d) out of area vnum bounds.", vnum, nr );
-
-    lua_pushinteger(LS, vnum);
-    return 1;
-}
-
 static int set_flag( lua_State *LS,
         const char *funcname, 
         const struct flag_type *flagtbl, 
-        tflag flagvar )
+        long *flagvar )
 {
     const char *argument = check_string( LS, 2, MIL);
     bool set = TRUE;
@@ -1612,43 +1429,17 @@ static int set_flag( lua_State *LS,
         luaL_error(LS, "'%s' invalid flag for %s", argument, funcname);
         
     if ( set )
-        SET_BIT( flagvar, flag );
+        SET_BIT( *flagvar, flag );
     else
-        REMOVE_BIT( flagvar, flag);
+        REMOVE_BIT( *flagvar, flag);
         
     return 0;
 }
 
-static int set_iflag( lua_State *LS,
-        const char *funcname,
-        const struct flag_type *flagtbl,
-        int *intvar)
-{
-    const char *argument = check_string( LS, 2, MIL);
-    bool set = TRUE;
-    if (!lua_isnone( LS, 3 ) )
-    {
-        set=lua_toboolean(LS,3);
-    }
-
-    int flag=flag_lookup( argument, flagtbl);
-    if ( flag == NO_FLAG )
-        return luaL_error(LS, "'%s' invalid flag for %s", argument, funcname);
-
-    if ( set )
-        I_SET_BIT( *intvar, flag);
-    else
-        I_REMOVE_BIT( *intvar, flag);
-
-    return 0;
-}
-        
-
-static int check_tflag_iflag( lua_State *LS, 
+static int check_flag( lua_State *LS, 
         const char *funcname, 
         const struct flag_type *flagtbl, 
-        tflag flagvar,
-        int intvar )
+        long flagvar)
 {
     if (lua_isnone( LS, 2)) /* called with no string arg */
     {
@@ -1659,8 +1450,7 @@ static int check_tflag_iflag( lua_State *LS,
         for ( i=0 ; flagtbl[i].name ; i++)
         {
 
-            if ( (flagvar && IS_SET(flagvar, flagtbl[i].bit) )
-                    || I_IS_SET( intvar, flagtbl[i].bit) )
+            if ( IS_SET(flagvar, flagtbl[i].bit) )
             {
                 lua_pushstring( LS, flagtbl[i].name);
                 lua_rawseti(LS, -2, index++);
@@ -1675,209 +1465,9 @@ static int check_tflag_iflag( lua_State *LS,
     if ((flag=flag_lookup(argument, flagtbl)) == NO_FLAG)
         luaL_error(LS, "'%s' invalid flag for %s", argument, funcname);
     
-    if (flagvar)
-        lua_pushboolean( LS, IS_SET( flagvar, flag ) );
-    else
-        lua_pushboolean( LS, I_IS_SET( intvar, flag ) );
+    lua_pushboolean( LS, IS_SET( flagvar, flag ) );
+
     return 1;
-}
-
-static int check_flag( lua_State *LS,
-        const char *funcname,
-        const struct flag_type *flagtbl,
-        tflag flagvar)
-{
-    return check_tflag_iflag( LS,
-            funcname,
-            flagtbl,
-            flagvar,
-            0);
-}
-
-static int check_iflag( lua_State *LS,
-        const char *funcname,
-        const struct flag_type *flagtbl,
-        int iflagvar)
-{
-    return check_tflag_iflag( LS,
-            funcname,
-            flagtbl,
-            NULL,
-            iflagvar);
-}
-
-static int L_rundelay( lua_State *LS)
-{
-    lua_getglobal( LS, "delaytbl"); /*2*/
-    if (lua_isnil( LS, -1) )
-    {
-        luaL_error( LS, "run_delayed_function: couldn't find delaytbl");
-    }
-
-    lua_pushvalue( LS, 1 );
-    lua_gettable( LS, 2 ); /* pops key */ /*3, delaytbl entry*/
-
-    if (lua_isnil( LS, 3) )
-    {
-        luaL_error( LS, "Didn't find entry in delaytbl");
-    }
-
-    lua_getfield( LS, -1, "udobj");
-    lua_getfield( LS, -1, "valid");
-    if ( !lua_toboolean(LS, -1) )
-    {
-        /* game object was invalidated/destroyed */
-        /* kill the entry and get out of here */
-        lua_pushvalue( LS, 1 ); /* lightud as key */
-        lua_pushnil( LS ); /* nil as value */
-        lua_settable( LS, 2 ); /* pops key and value */
-
-        return 0;
-    }
-    else
-        lua_pop(LS, 1); // pop valid
-
-    lua_getfield( LS, -2, "security");
-    int sec=luaL_checkinteger( LS, -1);
-    lua_pop(LS, 1);
-
-    lua_getfield( LS, -2, "func"); 
-
-    /* kill the entry before call in case of error */
-    lua_pushvalue( LS, 1 ); /* lightud as key */
-    lua_pushnil( LS ); /* nil as value */
-    lua_settable( LS, 2 ); /* pops key and value */ 
-
-    if ( is_CH( LS, -2 ) )
-    {
-        lua_mob_program( NULL, RUNDELAY_VNUM, NULL,
-                check_CH(LS, -2), NULL, 
-                NULL, 0, NULL, 0,
-                TRIG_CALL, sec );
-    }
-    else if ( is_OBJ( LS, -2 ) )
-    {
-        lua_obj_program( NULL, RUNDELAY_VNUM, NULL,
-                check_OBJ(LS, -2), NULL,
-                NULL, NULL,
-                TRIG_CALL, sec );
-    }
-    else if ( is_AREA( LS, -2 ) )
-    {
-        lua_area_program( NULL, RUNDELAY_VNUM, NULL,
-                check_AREA(LS, -2), NULL,
-                TRIG_CALL, sec );
-    }
-    else if ( is_ROOM( LS, -2 ) )
-    {
-        lua_room_program( NULL, RUNDELAY_VNUM, NULL, 
-                check_ROOM(LS, -2), NULL,
-                NULL, NULL, NULL, NULL,
-                TRIG_CALL, sec );
-    }
-    else
-        luaL_error(LS, "Bad udobj type." );
-
-    return 0;
-}
-
-void run_delayed_function( TIMER_NODE *tmr )
-{
-    lua_pushcfunction( g_mud_LS, L_rundelay );
-    lua_pushlightuserdata( g_mud_LS, (void *)tmr );
-
-    if (CallLuaWithTraceBack( g_mud_LS, 1, 0) )
-    {
-        bugf ( "Error running delayed function:\n %s",
-                lua_tostring(g_mud_LS, -1));
-        return;
-    }
-
-}
-
-int L_delay (lua_State *LS)
-{
-    /* delaytbl has timer pointers as keys
-       value is table with 'tableid' and 'func' keys */
-    /* delaytbl[tmr]={ tableid=tableid, func=func } */
-    const char *tag=NULL;
-    int val=luaL_checkint( LS, 2 );
-    luaL_checktype( LS, 3, LUA_TFUNCTION);
-    if (!lua_isnone( LS, 4 ) )
-    {
-       tag=check_string( LS, 4, MIL );
-    }
-
-    lua_getglobal( LS, "delaytbl");
-    TIMER_NODE *tmr=register_lua_timer( val, tag );
-    lua_pushlightuserdata( LS, (void *)tmr);
-    lua_newtable( LS );
-
-/*
-    lua_pushliteral( LS, "tableid");
-    lua_getfield( LS, 1, "tableid");
-    lua_settable( LS, -3 );
-*/
-    lua_pushliteral( LS, "udobj");
-    lua_pushvalue( LS, 1 );
-    lua_settable( LS, -3 );
-
-    lua_pushliteral( LS, "func");
-    lua_pushvalue( LS, 3 );
-    lua_settable( LS, -3 );
-
-    lua_pushliteral( LS, "security");
-    lua_pushinteger( LS, g_ScriptSecurity ); 
-    lua_settable( LS, -3 );
-
-    lua_settable( LS, -3 );
-
-    return 0;
-}
-
-int L_cancel (lua_State *LS)
-{
-    /* http://pgl.yoyo.org/luai/i/next specifies it is safe
-       to modify or clear fields during iteration */
-    /* for k,v in pairs(delaytbl) do
-            if v.udobj==arg1 then
-                unregister_lua_timer(k)
-                delaytbl[k]=nil
-            end
-       end
-       */
-
-    /* 1, game object */
-    const char *tag=NULL;
-    if (!lua_isnone(LS, 2))
-    {
-        tag=check_string( LS, 2, MIL );
-        lua_remove( LS, 2 );
-    }
-
-    lua_getglobal( LS, "delaytbl"); /* 2, delaytbl */
-
-    lua_pushnil( LS );
-    while ( lua_next(LS, 2) != 0 ) /* pops nil */
-    {
-        /* key at 3, val at 4 */
-        lua_getfield( LS, 4, "udobj");
-        if (lua_equal( LS, 5, 1 )==1)
-        {
-            luaL_checktype( LS, 3, LUA_TLIGHTUSERDATA);
-            TIMER_NODE *tmr=(TIMER_NODE *)lua_touserdata( LS, 3);
-            if (unregister_lua_timer( tmr, tag ) ) /* return false if tag no match*/
-            {
-                /* set table entry to nil */
-                lua_pushvalue( LS, 3 ); /* push key */
-                lua_pushnil( LS );
-                lua_settable( LS, 2 );
-            }
-        }
-        lua_pop(LS, 2); /* pop udobj and value */
-    }
-
-    return 0;
 }
 
 /* macro the heck out of this stuff so we don't have to rewrite for OBJ_DATA and OBJ_INDEX_DATA */
@@ -1918,13 +1508,6 @@ OBJVGT( funcname, \
 
 
 OBJVGETINT( light, ITEM_LIGHT, 2 )
-
-OBJVGETINT( arrowcount, ITEM_ARROWS, 0 )
-
-OBJVGETINT( arrowdamage, ITEM_ARROWS, 1 )
-
-OBJVGETSTR( arrowdamtype, ITEM_ARROWS, 
-        flag_bit_name(damage_type, ud_obj->value[2]) )
 
 OBJVGT( spelllevel,  
     switch(ud_obj->item_type)
@@ -2056,9 +1639,6 @@ OBJVGETINT( numdice, ITEM_WEAPON, 1 )
 OBJVGETINT( dicetype, ITEM_WEAPON, 2 )
 
 OBJVGETSTR( attacktype, ITEM_WEAPON, attack_table[ud_obj->value[3]].name )
-
-OBJVGETSTR( damtype, ITEM_WEAPON, 
-        flag_bit_name(damage_type, attack_table[ud_obj->value[3]].damage) )
 
 OBJVGETSTR( damnoun, ITEM_WEAPON, attack_table[ud_obj->value[3]].noun )
 
@@ -2215,11 +1795,9 @@ OBJVIF ( furnitureflag, ITEM_FURNITURE, 2, furniture_flags )
 OBJVIF ( weaponflag, ITEM_WEAPON, 4, weapon_type2 )
 
 OBJVIF ( containerflag, ITEM_CONTAINER, 1, container_flags )
-#endif
 /* end common section */
 
 /* CH section */
-#if 0
 static int CH_randchar (lua_State *LS)
 {
     CHAR_DATA *ch=get_random_char(check_CH(LS,1) );
@@ -2232,7 +1810,6 @@ static int CH_randchar (lua_State *LS)
         return 1;
 
 }
-#endif
 
 /* analog of run_olc_editor in olc.c */
 /*
@@ -2290,7 +1867,6 @@ static int CH_olc (lua_State *LS)
     return 0;
 }
 */
-#if 0
 static int CH_tprint ( lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS, 1);
@@ -2325,6 +1901,7 @@ static int CH_savetbl (lua_State *LS)
     return 0;
 }
 
+#if 0
 static int CH_loadtbl (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -2399,6 +1976,8 @@ static int CH_loadprog (lua_State *LS)
 
     return 0;
 }
+
+#endif
 static int CH_emote (lua_State *LS)
 {
     do_emote( check_CH(LS, 1), check_fstring( LS, 2, MIL) );
@@ -2419,22 +1998,13 @@ static int CH_zecho (lua_State *LS)
 
 static int CH_kill (lua_State *LS)
 {
-    if ( lua_isstring(LS, 2) )
-        do_mpkill( check_CH(LS, 1), check_string( LS, 2, MIL));
-    else
-        mpkill( check_CH(LS, 1),
-                check_CH(LS, 2) );
-
+    do_mpkill( check_CH(LS, 1), check_string( LS, 2, MIL));
     return 0;
 }
 
 static int CH_assist (lua_State *LS)
 {
-    if ( lua_isstring(LS, 2) )
-        do_mpassist( check_CH(LS, 1), check_string( LS, 2, MIL));
-    else
-        mpassist( check_CH(LS, 1), 
-                check_CH(LS, 2) );
+    do_mpassist( check_CH(LS, 1), check_string( LS, 2, MIL));
     return 0;
 }
 
@@ -2477,15 +2047,6 @@ static int CH_echoat (lua_State *LS)
 
     mpechoat( check_CH(LS, 1), check_CH(LS, 2), check_fstring( LS, 3, MIL) );
     return 0;
-}
-
-static int CH_mload (lua_State *LS)
-{
-    CHAR_DATA *mob=mpmload( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-    if ( mob && push_CH(LS,mob) )
-        return 1;
-    else
-        return 0;
 }
 
 static int CH_purge (lua_State *LS)
@@ -2617,125 +2178,10 @@ static int CH_remove (lua_State *LS)
     return 0;
 }
 
-static int CH_remort (lua_State *LS)
-{
-    if ( !is_CH(LS, 2) )
-    {
-        /* standard 'mob remort' syntax */
-        do_mpremort( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-        return 0;
-    }
-
-    mpremort( check_CH(LS, 1), check_CH(LS, 2));
-
-    return 0;
-}
-
-static int CH_qset (lua_State *LS)
-{
-    if ( !is_CH( LS, 2 ) )
-    {
-        /* standard 'mob qset' syntax */
-        do_mpqset( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-        return 0;
-    }
-
-
-    mpqset( check_CH(LS, 1), check_CH(LS, 2),
-            check_string(LS, 3, MIL), check_string(LS, 4, MIL),
-            lua_isnone( LS, 5 ) ? 0 : (int)luaL_checknumber( LS, 5),
-            lua_isnone( LS, 6 ) ? 0 : (int)luaL_checknumber( LS, 6) );
-
-    return 0;
-}
-
-static int CH_qadvance (lua_State *LS)
-{
-    if ( !is_CH( LS, 2) )
-    {
-        /* standard 'mob qset' syntax */
-        do_mpqadvance( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-        return 0;
-    }
-
-    mpqadvance( check_CH(LS, 1), check_CH(LS, 2),
-            check_string(LS, 3, MIL),
-            lua_isnone( LS, 4 ) ? "" : check_string(LS, 4, MIL) ); 
-
-
-    return 0;
-}
-
-static int CH_reward (lua_State *LS)
-{
-    if ( !is_CH( LS, 2 ) )
-    {
-        /* standard 'mob reward' syntax */
-        do_mpreward( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-        return 0;
-    }
-
-    mpreward( check_CH(LS, 1), check_CH(LS, 2),
-            check_string(LS, 3, MIL),
-            (int)luaL_checknumber(LS, 4) );
-    return 0;
-}
-
-static int CH_peace (lua_State *LS)
-{
-    if ( lua_isnone( LS, 2) )
-        do_mppeace( check_CH(LS, 1), "");
-    else
-        do_mppeace( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_restore (lua_State *LS)
-{
-    do_mprestore( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_hit (lua_State *LS)
-{
-    if (lua_isnone( LS, 2 ) )
-    {
-        do_mphit( check_CH(LS,1), "" );
-    }
-    else
-    {
-        do_mphit( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-    }
-
-    return 0;
-
-}
-
 static int CH_mdo (lua_State *LS)
 {
     interpret( check_CH(LS, 1), check_fstring( LS, 2, MIL));
 
-    return 0;
-}
-
-static int CH_tell (lua_State *LS)
-{
-    if (lua_isstring(LS, 2))
-    {
-        char buf[MIL];
-        sprintf( buf,
-                "'%s' %s",
-                check_string(LS, 2, 25),
-                check_fstring(LS, 3, MIL-30) );
-        do_tell( check_CH(LS, 1), buf );
-        return 0;
-    }
-
-    tell_char( check_CH( LS, 1),
-            check_CH( LS, 2),
-            check_fstring( LS, 3, MIL) );
     return 0;
 }
 
@@ -2744,8 +2190,8 @@ static int CH_mobhere (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1); 
     const char *argument = check_fstring( LS, 2, MIL);
 
-    if ( is_r_number( argument ) )
-        lua_pushboolean( LS, (bool) get_mob_vnum_room( ud_ch, r_atoi(ud_ch, argument) ) ); 
+    if ( is_number( argument ) )
+        lua_pushboolean( LS, (bool) get_mob_vnum_room( ud_ch, atoi(argument) ) ); 
     else
         lua_pushboolean( LS,  (bool) (get_char_room( ud_ch, argument) != NULL) );
 
@@ -2757,8 +2203,8 @@ static int CH_objhere (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_fstring( LS, 2, MIL);
 
-    if ( is_r_number( argument ) )
-        lua_pushboolean( LS,(bool) get_obj_vnum_room( ud_ch, r_atoi(ud_ch, argument) ) );
+    if ( is_number( argument ) )
+        lua_pushboolean( LS,(bool) get_obj_vnum_room( ud_ch, atoi(argument) ) );
     else
         lua_pushboolean( LS,(bool) (get_obj_here( ud_ch, argument) != NULL) );
 
@@ -2770,7 +2216,7 @@ static int CH_mobexists (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1); 
     const char *argument = check_fstring( LS, 2, MIL);
 
-    lua_pushboolean( LS,(bool) (get_mp_char( ud_ch, argument) != NULL) );
+    lua_pushboolean( LS,(bool) (get_char_world( ud_ch, argument) != NULL) );
 
     return 1;
 }
@@ -2780,7 +2226,7 @@ static int CH_objexists (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1); 
     const char *argument = check_fstring( LS, 2, MIL);
 
-    lua_pushboolean( LS, (bool) (get_mp_obj( ud_ch, argument) != NULL) );
+    lua_pushboolean( LS, (bool) (get_obj_world( ud_ch, argument) != NULL) );
 
     return 1;
 }
@@ -2878,9 +2324,9 @@ static int CH_affected (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_string(LS, 2, MIL);
 
-    lua_pushboolean( LS,  ud_ch != NULL
-            &&  is_affected_parse(ud_ch, argument) );
-
+    lua_pushboolean( LS,
+            IS_SET( ud_ch->affected_by,
+                flag_lookup(argument, act_flags)));
     return 1;
 }
 
@@ -2902,7 +2348,7 @@ static int CH_setact (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "act[NPC]", act_flags, ud_ch->act );
+        return set_flag( LS, "act[NPC]", act_flags, &ud_ch->act );
     }
     else
         return luaL_error( LS, "'setact' for NPC only." );
@@ -2926,7 +2372,7 @@ static int CH_setimmune (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "immune", imm_flags, ud_ch->imm_flags );
+        return set_flag( LS, "immune", imm_flags, &ud_ch->imm_flags );
     }
     else
         return luaL_error( LS, "'setimmune' for NPC only.");
@@ -2942,55 +2388,16 @@ static int CH_carries (lua_State *LS)
     if ( is_number( argument ) )
     {
         int vnum=atoi( argument );
-        OBJ_DATA *obj;
 
-        for ( obj=ud_ch->carrying ; obj ; obj=obj->next_content )
-        {
-            if ( obj->pIndexData->vnum == vnum )
-            {
-                count++;
-            }
-        }
-
-        if (count<1)
-        {
-            lua_pushboolean(LS, FALSE);
-            return 1;
-        }
-        else
-        {
-            lua_pushinteger(LS, count);
-            return 1;
-        } 
+        lua_pushboolean(LS,
+                has_item(ud_ch, vnum, -1, FALSE));
+        return 1;
     }
     else
     {
-        OBJ_DATA *obj;
-        bool exact=FALSE;
-        if (!lua_isnone(LS,3))
-        {
-            exact=lua_toboolean(LS,3);
-        }
-
-        for ( obj=ud_ch->carrying ; obj ; obj=obj->next_content )
-        {
-            if (    obj->wear_loc == WEAR_NONE 
-                 && is_either_name( argument, obj->name, exact))
-            {
-                count++;
-            }
-        }
-
-        if (count<1)
-        {
-            lua_pushboolean(LS, FALSE);
-            return 1;
-        }
-        else
-        {
-            lua_pushinteger(LS, count);
-            return 1;
-        }
+        lua_pushboolean(LS,
+                get_obj_carry(ud_ch, argument, ud_ch) != NULL);
+        return 1;
     }
 }
 
@@ -2999,8 +2406,8 @@ static int CH_wears (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_fstring( LS, 2, MIL);
 
-    if ( is_r_number( argument ) )
-        lua_pushboolean( LS, ud_ch != NULL && has_item( ud_ch, r_atoi(ud_ch, argument), -1, TRUE ) );
+    if ( is_number( argument ) )
+        lua_pushboolean( LS, ud_ch != NULL && has_item( ud_ch, atoi(argument), -1, TRUE ) );
     else
         lua_pushboolean( LS, ud_ch != NULL && (get_obj_wear( ud_ch, argument ) != NULL) );
 
@@ -3026,7 +2433,6 @@ static int CH_uses (lua_State *LS)
 
     return 1;
 }
-#endif
 static int CH_say (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
@@ -3183,7 +2589,7 @@ static int CH_removeaffect (lua_State *LS)
 
     return 0;
 } 
-
+#endif
 static int CH_oload (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
@@ -3194,7 +2600,6 @@ static int CH_oload (lua_State *LS)
         luaL_error(LS, "No object with vnum: %d", num);
 
     OBJ_DATA *obj = create_object(pObjIndex, 0);
-    check_enchant_obj( obj );
 
     obj_to_char(obj,ud_ch);
 
@@ -3236,24 +2641,11 @@ static int CH_setvuln (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "vuln", vuln_flags, ud_ch->vuln_flags );
+        return set_flag( LS, "vuln", vuln_flags, &ud_ch->vuln_flags );
     }
     else
         return luaL_error( LS, "'setvuln' for NPC only." );
 
-}
-
-static int CH_qstatus (lua_State *LS)
-{
-    CHAR_DATA * ud_ch = check_CH (LS, 1);
-    int num = (int)luaL_checknumber (LS, 2);
-
-    if ( ud_ch != NULL )
-        lua_pushnumber( LS, quest_status( ud_ch, num ) );
-    else
-        lua_pushnumber( LS, 0);
-
-    return 1;
 }
 
 static int CH_resist (lua_State *LS)
@@ -3267,7 +2659,7 @@ static int CH_setresist (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "resist", res_flags, ud_ch->res_flags );
+        return set_flag( LS, "resist", res_flags, &ud_ch->res_flags );
     }
     else
         return luaL_error( LS, "'setresist' for NPC only.");
@@ -3278,10 +2670,6 @@ static int CH_skilled (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_string( LS, 2, MIL);
     bool prac=FALSE;
-    if (!lua_isnone(LS, 3))
-    {
-        prac=lua_toboolean(LS, 3);
-    }
 
     int sn=skill_lookup(argument);
     if (sn==-1)
@@ -3295,56 +2683,9 @@ static int CH_skilled (lua_State *LS)
         return 1;
     }
 
-    if (prac)
-    {
-        lua_pushinteger( LS, get_skill_prac( ud_ch, sn) );
-        return 1;
-    }
-
     lua_pushinteger(LS, skill);
     return 1;
 }
-
-static int CH_ccarries (lua_State *LS)
-{
-    CHAR_DATA * ud_ch = check_CH (LS, 1);
-    const char *argument = check_fstring( LS, 2, MIL);
-
-    if ( is_r_number( argument ) )
-    {
-        lua_pushboolean( LS, ud_ch != NULL && has_item_in_container( ud_ch, r_atoi(ud_ch, argument), "zzyzzxzzyxyx" ) );
-    }
-    else
-    {
-        lua_pushboolean( LS, ud_ch != NULL && has_item_in_container( ud_ch, -1, argument ) );
-    }
-
-    return 1;
-}
-
-static int CH_qtimer (lua_State *LS)
-{
-    CHAR_DATA * ud_ch = check_CH (LS, 1);
-    int num = (int)luaL_checknumber (LS, 2);
-
-    if ( ud_ch != NULL )
-        lua_pushnumber( LS, qset_timer( ud_ch, num ) );
-    else
-        lua_pushnumber( LS, 0);
-
-    return 1;
-}
-
-static int CH_delay (lua_State *LS)
-{
-    return L_delay( LS );
-}
-
-static int CH_cancel (lua_State *LS)
-{
-    return L_cancel( LS );
-}
-
 
 static int CH_set_waitcount (lua_State *LS)
 {
@@ -3521,28 +2862,6 @@ static int CH_get_level (lua_State *LS)
     lua_pushinteger( LS,
             (check_CH(LS,1))->level );
     return 1;
-}
-
-static int CH_set_level (lua_State *LS)
-{
-    CHAR_DATA * ud_ch = check_CH (LS, 1);
-    if (!IS_NPC(ud_ch))
-        luaL_error(LS, "Cannot set level on PC.");
-
-    int num = (int)luaL_checknumber (LS, 2);
-    if ( num < 1 || num > 200 )
-        luaL_error( LS, "Invalid level: %d, range is 1 to 200.", num);
-
-    float hppcnt= (float)ud_ch->hit/ud_ch->max_hit;
-    float mppcnt= (float)ud_ch->mana/ud_ch->max_mana;
-    float mvpcnt= (float)ud_ch->move/ud_ch->max_move;
-
-    set_mob_level( ud_ch, num );
-
-    ud_ch->hit  = UMAX(1,hppcnt*ud_ch->max_hit);
-    ud_ch->mana = UMAX(0,mppcnt*ud_ch->max_mana);
-    ud_ch->move = UMAX(0,mvpcnt*ud_ch->max_move);
-    return 0;
 }
 
 static int CH_get_maxhp (lua_State *LS)
@@ -3812,33 +3131,6 @@ static int CH_get_race (lua_State *LS)
     return 1;
 }
 
-static int CH_set_race (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-#ifndef TESTER
-    if (!IS_NPC(ud_ch))
-        luaL_error( LS, "Can't set race on PCs.");
-#endif    
-    const char * arg=check_string(LS, 2, MIL);
-    int race=race_lookup(arg);
-    if (race==0)
-        luaL_error(LS, "No such race: %s", arg );
-
-#ifdef TESTER
-    if ( !IS_NPC(ud_ch) )
-    {
-        if ( !race_table[race].pc_race )
-            luaL_error(LS, "Not a valid player race: %s", arg);
-        ud_ch->race=race;
-        reset_char( ud_ch );
-        morph_update( ud_ch );
-        return 0;
-    }
-#endif
-    set_mob_race( ud_ch, race );
-    return 0;
-}
-
 static int CH_get_fighting (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -3969,15 +3261,6 @@ static int CH_get_proto( lua_State *LS)
         return 0;
     else
         return 1;
-}
-
-static int CH_get_ingame( lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    if (!IS_NPC(ud_ch)) luaL_error(LS, "Can't get ingame on PCs.");
-
-    lua_pushboolean( LS, is_mob_ingame( ud_ch->pIndexData ) );
-    return 1;
 }
 
 static int CH_get_shortdescr( lua_State *LS)
@@ -4130,10 +3413,9 @@ static int CH_get_descriptor( lua_State *LS )
     else
         return 0;
 }
-#endif
+
 static const LUA_PROP_TYPE CH_get_table [] =
 {
-#if 0
     CHGET(name, 0),
     CHGET(level, 0),
     CHGET(hp, 0),
@@ -4151,23 +3433,15 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(align, 0),
     CHGET(str, 0),
     CHGET(con, 0),
-    CHGET(vit, 0),
-    CHGET(agi, 0),
     CHGET(dex, 0),
     CHGET(int, 0),
     CHGET(wis, 0),
-    CHGET(dis, 0),
-    CHGET(cha, 0),
-    CHGET(ac, 0),
-    CHGET(acbase, 0),
     CHGET(hitroll, 0),
     CHGET(hitrollbase, 0),
     CHGET(damroll, 0),
     CHGET(damrollbase, 0),
     CHGET(attacktype, 0),
     CHGET(damnoun, 0),
-    CHGET(damtype, 0),
-    CHGET(luc, 0),
     CHGET(clan, 0),
     CHGET(class, 0),
     CHGET(race, 0),
@@ -4181,7 +3455,6 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(isfollow, 0),
     CHGET(isactive, 0),
     CHGET(fighting, 0),
-    CHGET(stopcount, 0),
     CHGET(waitcount, 0),
     CHGET(heshe, 0),
     CHGET(himher, 0),
@@ -4189,7 +3462,6 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(inventory, 0),
     CHGET(room, 0),
     CHGET(groupsize, 0),
-    CHGET(stance, 0),
     CHGET(description, 0),
     CHGET(pet, 0),
     CHGET(master, 0),
@@ -4198,36 +3470,18 @@ static const LUA_PROP_TYPE CH_get_table [] =
     CHGET(scroll, 0),
     CHGET(id, 0 ),
     /* PC only */
-    CHGET(clanrank, 0),
-    CHGET(remorts, 0),
-    CHGET(explored, 0),
-    CHGET(beheads, 0),
-    CHGET(pkills, 0),
-    CHGET(pkdeaths, 0),
-    CHGET(questpoints, 0),
-    CHGET(achpoints, 0),
-    CHGET(bank, 0),
-    CHGET(mobkills, 0),
-    CHGET(mobdeaths, 0),
     CHGET(descriptor, 0),
-    CHGET(bossachvs, 0),
-    CHGET(ptitle, 0),
-    CHGET(ptitles, 0),
     /* NPC only */
     CHGET(vnum, 0),
     CHGET(proto,0),
-    CHGET(ingame,0),
     CHGET(shortdescr, 0),
     CHGET(longdescr, 0),    
-#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE CH_set_table [] =
 {
-#if 0
     CHSET(name, 5),
-    CHSET(level, 5),
     CHSET(hp, 5),
     CHSET(maxhp, 5),
     CHSET(mana, 5),
@@ -4241,39 +3495,23 @@ static const LUA_PROP_TYPE CH_set_table [] =
     CHSET(align, 5),
     CHSET(str, 5),
     CHSET(con, 5),
-    CHSET(vit, 5),
-    CHSET(agi, 5),
     CHSET(dex, 5),
     CHSET(int, 5),
     CHSET(wis, 5),
-    CHSET(dis, 5),
-    CHSET(cha, 5),
-    CHSET(luc, 5),
-    CHSET(stopcount, 5),
-    CHSET(waitcount, 5),
-    CHSET(acpcnt, 5),
-    CHSET(acbase, 5),
     CHSET(hrpcnt, 5),
     CHSET(hitrollbase, 5),
     CHSET(drpcnt, 5),
     CHSET(damrollbase, 5),
     CHSET(attacktype, 5),
-    CHSET(race, 5),
+    CHSET(waitcount, 5),
     CHSET(shortdescr, 5),
     CHSET(longdescr, 5),
     CHSET(description, 5),
-    CHSET(pet, 5),
-    /* PC only */
-    CHSET(questpoints, SEC_NOSCRIPT),
-    CHSET(ptitles, SEC_NOSCRIPT),
-    CHSET(ptitle, SEC_NOSCRIPT),
-#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE CH_method_table [] =
 {
-#if 0
     CHMETH(mobhere, 0),
     CHMETH(objhere, 0),
     CHMETH(mobexists, 0),
@@ -4286,38 +3524,25 @@ static const LUA_PROP_TYPE CH_method_table [] =
     CHMETH(wears, 0),
     CHMETH(has, 0),
     CHMETH(uses, 0),
-    CHMETH(qstatus, 0),
     CHMETH(resist, 0),
     CHMETH(vuln, 0),
     CHMETH(skilled, 0),
-    CHMETH(ccarries, 0),
-    CHMETH(qtimer, 0),
     CHMETH(cansee, 0),
     CHMETH(canattack, 0),
     CHMETH(destroy, 1),
     CHMETH(oload, 1),
-#endif
     CHMETH(say, 1),
-#if 0
     CHMETH(emote, 1),
     CHMETH(mdo, 1),
-    CHMETH(tell, 1),
     CHMETH(asound, 1),
     CHMETH(zecho, 1),
     CHMETH(kill, 1),
     CHMETH(assist, 1),
     CHMETH(junk, 1),
     CHMETH(echo, 1),
-    /* deprecated in favor of global funcs */
-    { "echoaround", CH_echoaround, 1, STS_DEPRECATED},
-    { "echoat", CH_echoat, 1, STS_DEPRECATED},
-    CHMETH(mload, 1),
     CHMETH(purge, 1),
     CHMETH(goto, 1),
     CHMETH(at, 1),
-    /* deprecated in favor of global funcs */
-    { "transfer", CH_transfer, 1, STS_DEPRECATED},
-    { "gtransfer", CH_gtransfer, 1, STS_DEPRECATED},
     CHMETH(otransfer, 1),
     CHMETH(force, 1),
     CHMETH(gforce, 1),
@@ -4325,35 +3550,21 @@ static const LUA_PROP_TYPE CH_method_table [] =
     CHMETH(cast, 1),
     CHMETH(damage, 1),
     CHMETH(remove, 1),
-    CHMETH(remort, 1),
-    CHMETH(qset, 1),
-    CHMETH(qadvance, 1),
-    CHMETH(reward, 1),
-    CHMETH(peace, 1),
-    CHMETH(restore, 1),
     CHMETH(setact, 1),
     CHMETH(setvuln, 1),
     CHMETH(setimmune, 1),
     CHMETH(setresist, 1),
-    CHMETH(hit, 1),
     CHMETH(randchar, 0),
-    CHMETH(loadprog, 1),
-    CHMETH(loadscript, 1),
-    CHMETH(loadstring, 1),
-    CHMETH(loadfunction, 1),
-    CHMETH(savetbl, 1),
-    CHMETH(loadtbl, 1),
+    //CHMETH(loadprog, 1),
+    //CHMETH(loadscript, 1),
+    //CHMETH(loadstring, 1),
+    //CHMETH(loadfunction, 1),
+    //CHMETH(savetbl, 1),
+    //CHMETH(loadtbl, 1),
     CHMETH(tprint, 1),
-    CHMETH(olc, 1),
-    CHMETH(delay, 1),
-    CHMETH(cancel, 1), 
-    CHMETH(setval, 1),
-    CHMETH(getval, 1),
-    CHMETH(rvnum, 0),
-    CHMETH(describe, 1),
-    CHMETH(addaffect, 9),
-    CHMETH(removeaffect,9),
-#endif
+    //CHMETH(olc, 1),
+    //CHMETH(addaffect, 9),
+    //CHMETH(removeaffect,9),
     ENDPTABLE
 }; 
 
@@ -4581,7 +3792,6 @@ static int OBJ_oload (lua_State *LS)
         luaL_error(LS, "No object with vnum: %d", num);
 
     OBJ_DATA *obj = create_object(pObjIndex);
-    check_enchant_obj( obj );
     obj_to_obj(obj,ud_obj);
 
     if ( !push_OBJ(LS, obj) )

@@ -243,7 +243,11 @@ void do_mpdump (CHAR_DATA * ch, char *argument)
         send_to_char ("No such MOBprogram.\n\r", ch);
         return;
     }
-    page_to_char (mprg->code, ch);
+
+    if (mprg->is_lua)
+        dump_prog(ch, mprg->code, FALSE);
+    else
+        page_to_char (mprg->code, ch);
 }
 
 /*
