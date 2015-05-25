@@ -1,8 +1,6 @@
 package.path = mud.luadir() .. "?.lua"
 
 glob_tprintstr=require "tprint"
-require "serialize"
-require "commands"
 
 envtbl={} -- game object script environments
 interptbl={} -- key is game object pointer, table of desc=desc pointer, name=char name
@@ -48,22 +46,6 @@ function glob_randnum(low, high)
     return math.floor( (mt.rand()*(high+1-low) + low)) -- people usually want inclusive
 end
 
-function SaveTable( name, tbl, areaFname )
-  if string.find(name, "[^a-zA-Z0-9_]") then
-    error("Invalid character in name.")
-  end
-
-  local dir=string.match(areaFname, "(%w+)\.are")
-  if not os.rename(dir, dir) then
-    os.execute("mkdir '" .. dir .. "'")
-  end
-  local f=io.open( dir .. "/" .. name .. ".lua", "w")
-  out,saved=serialize.save(name,tbl)
-  f:write(out)
-
-  f:close()
-end
-
 function linenumber( text )
     local cnt=1
     local rtn={}
@@ -74,40 +56,6 @@ function linenumber( text )
     end
             
     return table.concat(rtn)
-end
-
-function GetScript(subdir, name)
-  if string.find(subdir, "[^a-zA-Z0-9_]") then
-    error("Invalid character in name.")
-  end
-  if string.find(name, "[^a-zA-Z0-9_/]") then
-    error("Invalid character in name.")
-  end
-
-
-  local fname = mud.userdir() .. subdir .. "/" .. name .. ".lua"
-  local f,err=io.open(fname,"r")
-  if f==nil then
-    error( fname .. "error: " ..  err)
-  end
-
-  rtn=f:read("*all")
-  f:close()
-  return rtn
-end
-
-function LoadTable(name, areaFname)
-  if string.find(name, "[^a-zA-Z0-9_]") then
-    error("Invalid character in name.")
-  end
-
-  local dir=string.match(areaFname, "(%w+)\.are")
-  local f=loadfile( dir .. "/"  .. name .. ".lua")
-  if f==nil then
-    return nil
-  end
-
-  return f()
 end
 
 -- Standard functionality available for any env type
@@ -360,32 +308,6 @@ function list_files ( path )
     end
 
     return rtn
-end
-
-function start_con_handler( d, fun, ... )
-    forceset(d, "constate", "lua_handler")
-    forceset(d, "conhandler", coroutine.create( fun ) )
-
-    lua_con_handler( d, unpack(arg) )
-end
-
-function lua_con_handler( d, ...)
-    if not forceget(d,"conhandler") then
-        error("No conhandler for "..d.character.name)
-    end
-
-    local res,err=coroutine.resume(forceget(d,"conhandler"), unpack(arg))
-    if res == false then
-        forceset( d, "conhandler", nil )
-        forceset( d, "constate", "playing" )
-        error(err)
-    end
-
-    if coroutine.status(forceget(d, "conhandler"))=="dead" then
-        forceset( d, "conhandler", nil )
-        forceset( d, "constate", "playing" )
-    end
-    
 end
 
 function colorize( text )

@@ -5934,7 +5934,6 @@ static const LUA_PROP_TYPE HELP_method_table [] =
 
 /* end HELP section */
 
-#if 0
 /* DESCRIPTOR section */
 static int DESCRIPTOR_get_character( lua_State *LS )
 {
@@ -5950,100 +5949,14 @@ static int DESCRIPTOR_get_character( lua_State *LS )
         return 0;
 }
 
-static int DESCRIPTOR_get_constate( lua_State *LS )
-{
-    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
-
-    int state=con_state(ud_d);
-
-    const char *name = name_lookup( state, con_states );
-
-    if (!name)
-    {
-        bugf( "Unrecognized con state: %d", state );
-        lua_pushstring( LS, "ERROR" );
-    }
-    else
-    {
-        lua_pushstring( LS, name );
-    }
-    return 1;
-}
-
-static int DESCRIPTOR_set_constate( lua_State *LS )
-{
-    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
-    const char *name=check_string(LS, 2, MIL);
-
-    int state=flag_lookup( name, con_states );
-
-    if ( state == -1 )
-        return luaL_error( LS, "No such constate: %s", name );
-
-    if (!is_settable(state, con_states))
-        return luaL_error( LS, "constate cannot be set to %s", name );
-
-    set_con_state( ud_d, state );
-    return 0;
-}
-
-static int DESCRIPTOR_get_inbuf( lua_State *LS )
-{
-    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
-    lua_pushstring( LS, ud_d->inbuf);
-    return 1;
-}
-
-static int DESCRIPTOR_set_inbuf( lua_State *LS )
-{
-    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
-    const char *arg=check_string( LS, 2, MAX_PROTOCOL_BUFFER );
-
-    strcpy( ud_d->inbuf, arg );
-    return 0;
-}
-
-static int DESCRIPTOR_get_conhandler( lua_State *LS )
-{
-    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
-
-    if (!is_set_ref(ud_d->conhandler))
-        return 0;
-
-    push_ref( LS, ud_d->conhandler); 
-    return 1;
-}
-
-static int DESCRIPTOR_set_conhandler( lua_State *LS )
-{
-    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
-
-    if (is_set_ref(ud_d->conhandler))
-        release_ref( LS, &ud_d->conhandler);
-
-    save_ref( LS, 2, &ud_d->conhandler);
-    return 0;
-}
-
-#endif
 static const LUA_PROP_TYPE DESCRIPTOR_get_table [] =
 {
-#if 0
     GETP( DESCRIPTOR, character, 0 ),
-    GETP( DESCRIPTOR, constate, SEC_NOSCRIPT ),
-    GETP( DESCRIPTOR, inbuf, SEC_NOSCRIPT ),
-    GETP( DESCRIPTOR, conhandler, SEC_NOSCRIPT ),
-#endif
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE DESCRIPTOR_set_table [] =
 {
-#if 0
-    SETP( DESCRIPTOR, constate, SEC_NOSCRIPT),
-    SETP( DESCRIPTOR, inbuf, SEC_NOSCRIPT),
-    SETP( DESCRIPTOR, conhandler, SEC_NOSCRIPT),
-#endif
     ENDPTABLE
 };
 
@@ -6053,86 +5966,6 @@ static const LUA_PROP_TYPE DESCRIPTOR_method_table [] =
 };
 /* end DESCRIPTOR section */
 
-#if 0
-/* BOSSACHV section */
-static int BOSSACHV_get_qp( lua_State *LS )
-{
-    lua_pushinteger( LS,
-            check_BOSSACHV( LS, 1 )->quest_reward);
-    return 1;
-}
-
-static int BOSSACHV_get_exp( lua_State *LS )
-{
-    lua_pushinteger( LS,
-            check_BOSSACHV( LS, 1 )->exp_reward);
-    return 1;
-}
-static int BOSSACHV_get_gold( lua_State *LS )
-{
-    lua_pushinteger( LS,
-            check_BOSSACHV( LS, 1 )->gold_reward);
-    return 1;
-}
-static int BOSSACHV_get_achp( lua_State *LS )
-{
-    lua_pushinteger( LS,
-            check_BOSSACHV( LS, 1 )->ach_reward);
-    return 1;
-}
-
-static const LUA_PROP_TYPE BOSSACHV_get_table [] =
-{
-    GETP( BOSSACHV, qp, SEC_NOSCRIPT ),
-    GETP( BOSSACHV, exp, SEC_NOSCRIPT ),
-    GETP( BOSSACHV, gold, SEC_NOSCRIPT ),
-    GETP( BOSSACHV, achp, SEC_NOSCRIPT ), 
-    ENDPTABLE
-};
-
-static const LUA_PROP_TYPE BOSSACHV_set_table [] =
-{
-    ENDPTABLE
-};
-
-static const LUA_PROP_TYPE BOSSACHV_method_table [] =
-{
-    ENDPTABLE
-};
-/* end BOSSACHV section */
-
-/* BOSSREC section */
-
-static int BOSSREC_get_vnum( lua_State *LS )
-{
-    lua_pushinteger( LS, check_BOSSREC(LS,1)->vnum);
-    return 1;
-} 
-
-static int BOSSREC_get_timestamp( lua_State *LS )
-{
-    lua_pushinteger( LS, check_BOSSREC(LS,1)->timestamp);
-    return 1;
-}
-
-static const LUA_PROP_TYPE BOSSREC_get_table [] =
-{
-    GETP( BOSSREC, vnum, 0),
-    GETP( BOSSREC, timestamp, 0),
-    ENDPTABLE
-};
-
-static const LUA_PROP_TYPE BOSSREC_set_table [] =
-{
-    ENDPTABLE
-};
-
-static const LUA_PROP_TYPE BOSSREC_method_table [] =
-{
-    ENDPTABLE
-};
-/* end BOSSREC section */
-#endif
 void type_init( lua_State *LS)
 {
     int i;
