@@ -83,9 +83,9 @@ LUA_OBJ_TYPE *type_list [] =
 #define RSTSET( field, sec ) SETP( RESET, field sec)
 #define RSTMETH( field, sec ) METH( RESET, field, sec)
 
-#define PROGGET( field, sec) GETP( PROG, field, sec)
+#define MPROGGET( field, sec) GETP( MPROG, field, sec)
 
-#define TRIGGET( field, sec) GETP( TRIG, field, sec)
+#define MTRIGGET( field, sec) GETP( MTRIG, field, sec)
 
 #define SHOPGET( field, sec) GETP( SHOP, field, sec)
 #define SHOPMETH( field, sec) METH( SHOP, field, sec)
@@ -5796,44 +5796,41 @@ static const LUA_PROP_TYPE AFFECT_method_table [] =
 
 /* end AFFECT section */
 
-#if 0
-/* PROG section */
-static int PROG_get_islua ( lua_State *LS )
+/* MPROG section */
+static int MPROG_get_islua ( lua_State *LS )
 {
     lua_pushboolean( LS,
-            (check_PROG( LS, 1) )->is_lua);
+            (check_MPROG( LS, 1) )->is_lua);
     return 1;
 }
 
-static int PROG_get_vnum ( lua_State *LS )
+static int MPROG_get_vnum ( lua_State *LS )
 {
     lua_pushinteger( LS,
-            (check_PROG( LS, 1) )->vnum);
+            (check_MPROG( LS, 1) )->vnum);
     return 1;
 }
 
-static int PROG_get_code ( lua_State *LS )
+static int MPROG_get_code ( lua_State *LS )
 {
     lua_pushstring( LS,
-            (check_PROG( LS, 1) )->code);
+            (check_MPROG( LS, 1) )->code);
     return 1;
 }
 
-static int PROG_get_security ( lua_State *LS )
+static int MPROG_get_security ( lua_State *LS )
 {
     lua_pushinteger( LS,
-            (check_PROG( LS, 1) )->security);
+            (check_MPROG( LS, 1) )->security);
     return 1;
 }
-#endif
+
 static const LUA_PROP_TYPE MPROG_get_table [] =
 {
-#if 0
-    PROGGET( islua, 0),
-    PROGGET( vnum, 0),
-    PROGGET( code, 0),
-    PROGGET( security, 0),
-#endif
+    MPROGGET( islua, 0),
+    MPROGGET( vnum, 0),
+    MPROGGET( code, 0),
+    MPROGGET( security, 0),
     ENDPTABLE
 };
 
@@ -5846,93 +5843,43 @@ static const LUA_PROP_TYPE MPROG_method_table [] =
 {
     ENDPTABLE
 };
-/* end PROG section */
+/* end MPROG section */
 
-/* TRIG section */
-#if 0
-static int TRIG_get_trigtype ( lua_State *LS )
+/* MTRIG section */
+static int MTRIG_get_trigtype ( lua_State *LS )
 {
-    const struct flag_type *tbl;
-
-    lua_getmetatable(LS,1);
-    lua_getfield(LS, -1, "TYPE");
-    LUA_OBJ_TYPE *type=lua_touserdata( LS, -1 );
-
-    if (type==&MTRIG_type)
-    {
-        tbl=mprog_flags;
-    }
-    else if (type==&OTRIG_type)
-    {
-        tbl=oprog_flags;
-    }
-    else if (type==&ATRIG_type)
-    {
-        tbl=aprog_flags;
-    }
-    else if (type==&RTRIG_type)
-    {
-        tbl=rprog_flags;
-    }
-    else
-    {
-        return luaL_error( LS, "Invalid type: %s.", type->type_name );
-    }
+    MPROG_LIST *ud_mpl=check_MTRIG(LS,1);
 
     lua_pushstring( LS,
             flag_bit_name(
-                tbl,
-                ((PROG_LIST *) type->check( LS, 1 ) )->trig_type ) );
+                mprog_flags,
+                ud_mpl->trig_type));
     return 1;
 }
 
-static int TRIG_get_trigphrase ( lua_State *LS )
+static int MTRIG_get_trigphrase ( lua_State *LS )
 {
-    lua_getmetatable(LS,1);
-    lua_getfield(LS, -1, "TYPE");
-    LUA_OBJ_TYPE *type=lua_touserdata( LS, -1 );
-
-    if ( type != &MTRIG_type
-            && type != &OTRIG_type
-            && type != &ATRIG_type
-            && type != &RTRIG_type )
-        luaL_error( LS,
-                "Invalid type: %s.",
-                type->type_name);
+    MPROG_LIST *ud_mpl=check_MTRIG(LS,1);
 
     lua_pushstring( LS,
-            ((PROG_LIST *) type->check( LS, 1 ) )->trig_phrase);
+            ud_mpl->trig_phrase);
     return 1;
 }
 
-static int TRIG_get_prog ( lua_State *LS )
+static int MTRIG_get_prog ( lua_State *LS )
 {
-    lua_getmetatable(LS,1);
-    lua_getfield(LS, -1, "TYPE");
-    LUA_OBJ_TYPE *type=lua_touserdata( LS, -1 );
+    MPROG_LIST *ud_mpl=check_MTRIG(LS,1);
 
-    if ( type != &MTRIG_type
-            && type != &OTRIG_type
-            && type != &ATRIG_type
-            && type != &RTRIG_type )
-        luaL_error( LS,
-                "Invalid type: %s.",
-                type->type_name);
-
-    if ( push_PROG( LS,
-            ((PROG_LIST *)type->check( LS, 1 ) )->script ) )
-        return 1;
-    return 0;
+    lua_pushstring( LS,
+            ud_mpl->code);
+    return 1;
 }    
 
-#endif
 static const LUA_PROP_TYPE MTRIG_get_table [] =
 {
-#if 0
-    TRIGGET( trigtype, 0),
-    TRIGGET( trigphrase, 0),
-    TRIGGET( prog, 0),
-#endif
+    MTRIGGET( trigtype, 0),
+    MTRIGGET( trigphrase, 0),
+    MTRIGGET( prog, 0),
     ENDPTABLE
 };
 
