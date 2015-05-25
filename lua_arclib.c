@@ -187,205 +187,6 @@ static int utillib_format_color_string( lua_State *LS )
 
 #endif
 
-#if 0
-            
-static int godlib_helper_get_duration(lua_State* LS, int index)
-{
-    if (lua_isnone(LS, index))
-    {
-        return GOD_FUNC_DEFAULT_DURATION;
-    }
-    else
-    {
-        return luaL_checkinteger(LS, index);
-    }
-}
-
-static int godlib_bless (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_bless( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_curse (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_curse( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_heal (lua_State *LS)
-{
-
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_heal( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_speed (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_speed( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1; 
-}
-
-static int godlib_slow (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_slow( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1; 
-}
-
-static int godlib_cleanse (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_cleanse( NULL, ch, "", GOD_FUNC_DEFAULT_DURATION ));
-    return 1; 
-}
-
-static int godlib_defy (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_defy( NULL, ch, "", GOD_FUNC_DEFAULT_DURATION ));
-    return 1; 
-}
-
-static int godlib_enlighten (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_enlighten( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1; 
-}
-
-static int godlib_protect (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_protect( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_fortune (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_fortune( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_haunt (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_haunt( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_plague (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    lua_pushboolean( LS,
-            god_plague( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-static int godlib_confuse (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-
-    
-
-    lua_pushboolean( LS,
-            god_confuse( NULL, ch, "", godlib_helper_get_duration(LS, 2) ));
-    return 1;
-}
-
-#endif
-
-#if 0
-static int glob_transfer (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-    const char *arg=check_string(LS,2,MIL);
-    ROOM_INDEX_DATA *location=find_mp_location( ch, arg); 
-
-    if (!location)
-    {
-        lua_pushboolean( LS, FALSE);
-        return 1;
-    }
-    
-    transfer_char( ch, location );
-    lua_pushboolean( LS, TRUE);
-    return 1;
-}
-
-static int glob_gtransfer (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-    const char *arg=check_string(LS,2,MIL);
-    ROOM_INDEX_DATA *location=find_location( ch, arg);
-
-    if (!location)
-    {
-        lua_pushboolean( LS, FALSE);
-        return 1;
-    }
-
-    CHAR_DATA *victim, *next_char;
-    for ( victim=ch->in_room->people; victim; victim=next_char )
-    {
-        next_char=victim->next_in_room;
-        if ( is_same_group( ch, victim ) )
-        {
-            transfer_char(victim, location);
-        }
-    }
-
-    lua_pushboolean( LS, TRUE);
-    return 1;
-}
-
-static int glob_gecho (lua_State *LS)
-{
-    DESCRIPTOR_DATA *d;
-    const char *argument=check_fstring( LS, 1, MIL );
-
-    for ( d=descriptor_list; d; d=d->next )
-    {
-        if ( IS_PLAYING(d->connected ) )
-        {
-            if ( IS_IMMORTAL(d->character) )
-                send_to_char( "gecho> ", d->character );
-            send_to_char( argument, d->character );
-            send_to_char( "\n\r", d->character );
-        }
-    }
-
-    return 0;
-}
-
 static int glob_sendtochar (lua_State *LS)
 {
     CHAR_DATA *ch=check_CH(LS,1);
@@ -423,154 +224,6 @@ static int glob_echoaround (lua_State *LS)
     }
 
     return 0;
-}
-
-static int glob_dammessage (lua_State *LS)
-{
-    const char *vs;
-    const char *vp;
-    char punct;
-    char punctstr[2];
-    get_damage_messages( 
-            luaL_checkinteger( LS, 1 ),
-            0, &vs, &vp, &punct );
-
-    punctstr[0]=punct;
-    punctstr[1]='\0';
-
-    lua_pushstring( LS, vs );
-    lua_pushstring( LS, vp );
-    lua_pushstring( LS, punctstr);
-
-    return 3;
-}
-
-static int glob_do_luaquery ( lua_State *LS)
-{
-    int top=lua_gettop(LS);
-    lua_getglobal( LS, "do_luaquery");
-    lua_insert(LS, 1);
-    lua_call( LS, top, LUA_MULTRET );
-
-    return lua_gettop(LS);
-}
-
-static void push_mudconfig_val( lua_State *LS, CFG_DATA_ENTRY *en )
-{
-    switch( en->type )
-    {
-        case CFG_INT:
-            {
-                lua_pushinteger( LS, *((int *)(en->value)));
-                break;
-            }
-        case CFG_FLOAT:
-            {
-                lua_pushnumber( LS, *((float *)(en->value)));
-                break;
-            }
-        case CFG_STRING:
-            {
-                lua_pushstring( LS, *((char **)(en->value)));
-                break;
-            }
-        case CFG_BOOL:
-            {
-                lua_pushboolean( LS, *((bool *)(en->value)));
-                break;
-            }
-        default:
-            {
-                luaL_error( LS, "Bad type.");
-            }
-    }
-}
-
-static int glob_mudconfig (lua_State *LS)
-{
-    int i;
-    CFG_DATA_ENTRY *en;
-
-    /* no arg, return the whole table */
-    if (lua_isnone(LS,1))
-    {
-        lua_newtable(LS);
-        for ( i=0 ; mudconfig_table[i].name ; i++ )
-        {
-            en=&mudconfig_table[i];
-            push_mudconfig_val( LS, en );
-            lua_setfield(LS, -2, en->name);
-        }
-        return 1;
-    }
-
-    const char *arg1=check_string(LS, 1, MIL);
-    /* 1 argument, return the value */
-    if (lua_isnone(LS, 2))
-    {
-        for ( i=0 ; mudconfig_table[i].name ; i++ )
-        {
-            en=&mudconfig_table[i];
-            if (!strcmp(en->name, arg1))
-            {
-                push_mudconfig_val( LS, en );
-                return 1;
-            }
-        }
-        luaL_error(LS, "No such mudconfig value: %s", arg1);
-    }
-
-    /* 2 args, set the value */
-    for ( i=0 ; mudconfig_table[i].name ; i++ )
-    {
-        en=&mudconfig_table[i];
-        if (!strcmp(en->name, arg1))
-        {
-            switch( en->type )
-            {
-                case CFG_INT:
-                    {
-                        *((int *)(en->value))=luaL_checkinteger( LS, 2 );
-                        break;
-                    }
-                case CFG_FLOAT:
-                    {
-                        *((float *)(en->value))=luaL_checknumber(LS, 2 );
-                        break;
-                    }
-                case CFG_STRING:
-                    {
-                        const char *newval=check_string(LS, 2, MIL);
-                        *((const char **)(en->value))=str_dup(newval);
-                        break;
-                    }
-                case CFG_BOOL:
-                    {
-                        luaL_checktype( LS, 2, LUA_TBOOLEAN );
-                        *((bool *)(en->value))=lua_toboolean(LS, 2 );
-                        break;
-                    }
-                default:
-                    {
-                        luaL_error( LS, "Bad type.");
-                    }
-            }
-            return 0;
-        }
-    }
-    luaL_error(LS, "No such mudconfig value: %s", arg1);
-
-    return 0;
-}
-
-static int glob_start_con_handler( lua_State *LS)
-{
-    int top=lua_gettop(LS);
-    lua_getglobal( LS, "start_con_handler");
-    lua_insert( LS, 1);
-    lua_call( LS, top, LUA_MULTRET );
-    
-    return lua_gettop(LS);
 }
 
 static int glob_getglobals (lua_State *LS)
@@ -743,7 +396,6 @@ static int glob_getluatype (lua_State *LS)
 
     return 1;
 }
-#endif
 
 static int glob_clearloopcount (lua_State *LS)
 {
@@ -751,7 +403,6 @@ static int glob_clearloopcount (lua_State *LS)
     return 0;
 }
 
-#if 0
 static int glob_log (lua_State *LS)
 {
     char buf[MSL];
@@ -907,7 +558,7 @@ static int glob_pagetochar (lua_State *LS)
 
     return 0;
 }
-#endif
+
 static int glob_getobjlist (lua_State *LS)
 {
     OBJ_DATA *obj;
@@ -958,8 +609,6 @@ static int glob_getmoblist (lua_State *LS)
 
     return 1;
 }
-
-#if 0
 
 static int glob_getdescriptorlist (lua_State *LS)
 {
@@ -1043,59 +692,10 @@ static int glob_gethelplist ( lua_State *LS )
 
     return 1;
 }
-/* Mersenne Twister pseudo-random number generator */
 
-static int mtlib_srand (lua_State *LS)
-{
-    int i;
-
-    /* allow for table of seeds */
-
-    if (lua_istable (LS, 1))
-    {
-        size_t length = lua_objlen (LS, 1);  /* size of table */
-        if (length == 0)
-            luaL_error (LS, "mt.srand table must not be empty");
-
-        unsigned long * v = (unsigned long *) malloc (sizeof (unsigned long) * length);
-        if (!v)
-            luaL_error (LS, "Cannot allocate memory for seeds table");
-
-        for (i = 1; i <= length; i++)
-        {
-            lua_rawgeti (LS, 1, i);  /* get number */
-            if (!lua_isnumber (LS, -1))
-            {
-                free (v);  /* get rid of table now */
-                luaL_error (LS, "mt.srand table must consist of numbers");
-            }
-            v [i - 1] = luaL_checknumber (LS, -1);
-            lua_pop (LS, 1);   /* remove value   */
-        }
-        init_by_array (&v [0], length);
-        free (v);  /* get rid of table now */
-    }
-    else
-        init_genrand (luaL_checknumber (LS, 1));
-
-    return 0;
-} /* end of mtlib_srand */
-
-static int mtlib_rand (lua_State *LS)
-{
-    lua_pushnumber (LS, (double)genrand ());
-    return 1;
-} /* end of mtlib_rand */
-#endif
 static int mudlib_luadir( lua_State *LS)
 {
     lua_pushliteral( LS, LUA_DIR);
-    return 1;
-}
-#if 0
-static int mudlib_userdir( lua_State *LS)
-{
-    lua_pushliteral( LS, USER_DIR);
     return 1;
 }
 
@@ -1109,47 +709,6 @@ static int dbglib_show ( lua_State *LS)
     return 1;
 }
 
-static int glob_awardptitle( lua_State *LS)
-{
-    int top=lua_gettop(LS);
-    lua_getglobal(LS, "glob_awardptitle");
-
-    lua_insert( LS, 1);
-    lua_call( LS, top, LUA_MULTRET );
-    
-    return lua_gettop(LS);
-}
-
-static int glob_randnum ( lua_State *LS)
-{
-    int top=lua_gettop(LS);
-    lua_getglobal( LS, "glob_randnum");
-    lua_insert( LS, 1);
-    lua_call( LS, top, LUA_MULTRET );
-    
-    return lua_gettop(LS);
-}
-
-static int glob_rand ( lua_State *LS)
-{
-    int top=lua_gettop(LS);
-    lua_getglobal( LS, "glob_rand");
-    lua_insert( LS, 1 );
-    lua_call( LS, top, LUA_MULTRET );
-    
-    return lua_gettop(LS);
-}
-
-static int glob_tprintstr ( lua_State *LS)
-{
-    int top=lua_gettop(LS);
-    lua_getglobal( LS, "glob_tprintstr");
-    lua_insert(LS, 1);
-    lua_call( LS, top, LUA_MULTRET );
-    
-    return lua_gettop(LS);
-}
-
 static int glob_getrandomroom ( lua_State *LS)
 {
     ROOM_INDEX_DATA *room;
@@ -1159,13 +718,10 @@ static int glob_getrandomroom ( lua_State *LS)
     {
         room=get_room_index(number_range(0,65535));
         if ( ( room )
-                &&   is_room_ingame( room )
                 &&   !room_is_private(room)
                 &&   !IS_SET(room->room_flags, ROOM_PRIVATE)
                 &&   !IS_SET(room->room_flags, ROOM_SOLITARY)
-                &&   !IS_SET(room->room_flags, ROOM_SAFE)
-                &&   !IS_SET(room->room_flags, ROOM_JAIL)
-                &&   !IS_SET(room->room_flags, ROOM_NO_TELEPORT) )
+                &&   !IS_SET(room->room_flags, ROOM_SAFE) )
             break;
     }
 
@@ -1179,130 +735,47 @@ static int glob_getrandomroom ( lua_State *LS)
 
 }
 
-/* currently unused - commented out to avoid warning
-static int glob_cancel ( lua_State *LS)
-{
-    return L_cancel(LS);
-}
-*/
-
-static int glob_arguments ( lua_State *LS)
-{   
-    const char *argument=check_string( LS, 1, MIL );
-    char buf[MIL];
-    bool keepcase=FALSE;
-
-    if (!lua_isnone(LS,2))
-    {
-        keepcase=lua_toboolean(LS, 2);
-    }
-    
-    lua_newtable( LS );
-    int index=1;
-
-    while ( argument[0] != '\0' )
-    {
-        if (keepcase)
-            argument=one_argument_keep_case( argument, buf);
-        else
-            argument = one_argument( argument, buf );
-        lua_pushstring( LS, buf );
-        lua_rawseti( LS, -2, index++ );
-    }
-
-    return 1;
-}
         
-#endif
-
 #define ENDGTABLE { NULL, NULL, NULL, 0, 0 }
 #define GFUN( fun, sec ) { NULL, #fun , glob_ ## fun , sec, STS_ACTIVE }
 #define LFUN( lib, fun, sec) { #lib, #fun, lib ## lib_ ## fun , sec, STS_ACTIVE}
-#define GODF( fun ) LFUN( god, fun, 9 )
 #define DBGF( fun ) LFUN( dbg, fun, 9 )
-#define UTILF( fun ) LFUN( util, fun, 0)
 
 GLOB_TYPE glob_table[] =
 {
-#if 0
     GFUN(hour,          0),
     GFUN(gettime,       0),
     GFUN(getroom,       0),
-    GFUN(randnum,       0),
-    GFUN(rand,          0),
-    GFUN(tprintstr,     0),
     GFUN(getobjproto,   0),
     GFUN(getobjworld,   0),
     GFUN(getmobproto,   0),
     GFUN(getmobworld,   0),
     GFUN(getpc,         0),
     GFUN(getrandomroom, 0),
-    GFUN(transfer,      0),
-    GFUN(gtransfer,     0),
-    GFUN(awardptitle,   5),
     GFUN(sendtochar,    0),
     GFUN(echoat,        0),
     GFUN(echoaround,    0),
-    GFUN(gecho,         0),
     GFUN(pagetochar,    0),
-    GFUN( arguments,    0),
     GFUN(log,           0),
-#endif
     GFUN(getcharlist,   9),
     GFUN(getobjlist,    9),
     GFUN(getmoblist,    9),
-#if 0
     GFUN(getplayerlist, 9),
     GFUN(getarealist,   9),
     GFUN(getshoplist,   9),
     GFUN(gethelplist,   9),
     GFUN(getdescriptorlist, 9),
-    GFUN(dammessage,    0),
     GFUN(clearloopcount,9),
-    GFUN(mudconfig,     9),
-    GFUN(start_con_handler, 9),
     GFUN(forceget,      SEC_NOSCRIPT),
     GFUN(forceset,      SEC_NOSCRIPT),
     GFUN(getluatype,    SEC_NOSCRIPT),
     GFUN(getglobals,    SEC_NOSCRIPT),
-#ifdef TESTER
-    GFUN(do_luaquery,   9),
-#else
-    GFUN(do_luaquery,   SEC_NOSCRIPT),
-#endif
 
-    GODF(confuse),
-    GODF(curse),
-    GODF(plague),
-    GODF(bless),
-    GODF(slow),
-    GODF(speed),
-    GODF(heal),
-    GODF(enlighten),
-    GODF(protect),
-    GODF(fortune),
-    GODF(haunt),
-    GODF(cleanse),
-    GODF(defy),
-
-    UTILF(trim),
-    UTILF(convert_time),
-    UTILF(capitalize),
-    UTILF(pluralize),
-    UTILF(format_list),
-    UTILF(strlen_color),
-    UTILF(truncate_color_string),
-    UTILF(format_color_string),
-    
     DBGF(show),
 
     /* SEC_NOSCRIPT means aren't available for prog scripts */
 
-    LFUN( mt, srand,        SEC_NOSCRIPT ),
-    LFUN( mt, rand,         SEC_NOSCRIPT ),
-#endif
     LFUN( mud, luadir,      SEC_NOSCRIPT ),
-    //LFUN( mud, userdir,     SEC_NOSCRIPT ),
     
     ENDGTABLE
 };
