@@ -196,36 +196,6 @@ static int glob_sendtochar (lua_State *LS)
     return 0;
 }
 
-static int glob_echoat (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-    const char *msg=check_fstring( LS, 2, MSL);
-
-    send_to_char(msg, ch);
-    send_to_char("\n\r",ch);
-    return 0;
-}
-
-static int glob_echoaround (lua_State *LS)
-{
-    CHAR_DATA *ch=check_CH(LS,1);
-    const char *msg=check_fstring( LS, 2, MSL);
-
-    CHAR_DATA *tochar, *next_char;
-
-    for ( tochar=ch->in_room->people; tochar ; tochar=next_char )
-    {
-        next_char=tochar->next_in_room;
-        if ( tochar == ch )
-            continue;
-
-        send_to_char( msg, tochar );
-        send_to_char( "\n\r", tochar);
-    }
-
-    return 0;
-}
-
 static int glob_getglobals (lua_State *LS)
 {
     int i;
@@ -753,8 +723,6 @@ GLOB_TYPE glob_table[] =
     GFUN(getpc,         0),
     GFUN(getrandomroom, 0),
     GFUN(sendtochar,    0),
-    GFUN(echoat,        0),
-    GFUN(echoaround,    0),
     GFUN(pagetochar,    0),
     GFUN(log,           0),
     GFUN(getcharlist,   9),
@@ -1425,162 +1393,44 @@ static int CH_loadprog (lua_State *LS)
 }
 
 #endif
-static int CH_emote (lua_State *LS)
-{
-    do_emote( check_CH(LS, 1), check_fstring( LS, 2, MIL) );
-    return 0;
+
+#define mpmethod( meth ) \
+static int CH_ ## meth (lua_State *LS) \
+{\
+    do_mp ## meth ( check_CH(LS, 1), check_string(LS, 2, MIL));\
+    return 0;\
 }
 
-static int CH_asound (lua_State *LS)
-{
-    do_mpasound( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-    return 0; 
-}
+mpmethod( asound )
+mpmethod( gecho )
+mpmethod( zecho )
+mpmethod( kill )
+mpmethod( assist )
+mpmethod( junk )
+mpmethod( echo )
+mpmethod( echoaround )
+mpmethod( echoat )
+mpmethod( mload )
+mpmethod( oload )
+mpmethod( purge )
+mpmethod( goto )
+mpmethod( at )
+mpmethod( transfer )
+mpmethod( gtransfer )
+mpmethod( otransfer )
+mpmethod( force )
+mpmethod( gforce )
+mpmethod( vforce )
+mpmethod( cast )
+mpmethod( damage )
+mpmethod( remember )
+mpmethod( forget )
+mpmethod( delay )
+mpmethod( cancel )
+mpmethod( call )
+mpmethod( flee )
+mpmethod( remove )
 
-static int CH_zecho (lua_State *LS)
-{
-    do_mpzecho( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-    return 0;
-}
-
-static int CH_kill (lua_State *LS)
-{
-    do_mpkill( check_CH(LS, 1), check_string( LS, 2, MIL));
-    return 0;
-}
-
-static int CH_assist (lua_State *LS)
-{
-    do_mpassist( check_CH(LS, 1), check_string( LS, 2, MIL));
-    return 0;
-}
-
-static int CH_junk (lua_State *LS)
-{
-    do_mpjunk( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_echo (lua_State *LS)
-{
-    do_mpecho( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_purge (lua_State *LS)
-{
-    // Send empty string for no argument
-    if ( lua_isnone( LS, 2) )
-    {
-        do_mppurge( check_CH(LS, 1), "");
-    }
-    else
-    {
-        do_mppurge( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-    }
-
-    return 0;
-}
-
-static int CH_goto (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    const char *location = check_string(LS,2,MIL);
-    bool hidden=FALSE;
-    if ( !lua_isnone(LS,3) )
-    {
-        hidden=lua_toboolean(LS,3);
-    }
-
-    do_mpgoto( ud_ch, location);
-
-    if (!hidden)
-    {
-        do_look( ud_ch, "auto");
-    }
-
-    return 0;
-}
-
-static int CH_at (lua_State *LS)
-{
-
-    do_mpat( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_otransfer (lua_State *LS)
-{
-    do_mpotransfer( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_force (lua_State *LS)
-{
-
-    do_mpforce( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_gforce (lua_State *LS)
-{
-
-    do_mpgforce( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_vforce (lua_State *LS)
-{
-
-    do_mpvforce( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_cast (lua_State *LS)
-{
-
-    do_mpcast( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
-
-static int CH_damage (lua_State *LS)
-{
-    if ( lua_type(LS, 2 ) == LUA_TSTRING )
-    {
-        do_mpdamage( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-        return 0;
-    }
-    
-    CHAR_DATA *ud_ch=check_CH(LS, 1);
-    CHAR_DATA *victim=check_CH(LS, 2);
-    if (ud_ch->in_room != victim->in_room)
-        luaL_error(LS, 
-                "Actor and victim must be in same room." );
-    int dam=luaL_checkinteger(LS, 3);
-    
-    int damtype;
-    damtype=DAM_NONE;
-
-    lua_pushboolean( LS,
-            damage(ud_ch, victim, dam, TYPE_UNDEFINED, damtype, FALSE) );
-    return 1;
-}
-
-static int CH_remove (lua_State *LS)
-{
-
-    do_mpremove( check_CH(LS, 1), check_fstring( LS, 2, MIL));
-
-    return 0;
-}
 
 static int CH_mdo (lua_State *LS)
 {
@@ -1993,25 +1843,6 @@ static int CH_removeaffect (lua_State *LS)
     return 0;
 } 
 #endif
-static int CH_oload (lua_State *LS)
-{
-    CHAR_DATA * ud_ch = check_CH (LS, 1);
-    int num = (int)luaL_checknumber (LS, 2);
-    OBJ_INDEX_DATA *pObjIndex = get_obj_index( num );
-
-    if (!pObjIndex)
-        luaL_error(LS, "No object with vnum: %d", num);
-
-    OBJ_DATA *obj = create_object(pObjIndex, 0);
-
-    obj_to_char(obj,ud_ch);
-
-    if ( !push_OBJ(LS, obj) )
-        return 0;
-    else
-        return 1;
-
-}
 
 static int CH_destroy (lua_State *LS)
 {
@@ -2932,25 +2763,36 @@ static const LUA_PROP_TYPE CH_method_table [] =
     CHMETH(cansee, 0),
     CHMETH(canattack, 0),
     CHMETH(destroy, 1),
-    CHMETH(oload, 1),
     CHMETH(say, 1),
-    CHMETH(emote, 1),
     CHMETH(mdo, 1),
     CHMETH(asound, 1),
+    CHMETH(gecho, 1),
     CHMETH(zecho, 1),
     CHMETH(kill, 1),
     CHMETH(assist, 1),
     CHMETH(junk, 1),
     CHMETH(echo, 1),
+    CHMETH(echoaround, 1),
+    CHMETH(echoat, 1),
+    CHMETH(mload, 1),
+    CHMETH(oload, 1),
     CHMETH(purge, 1),
     CHMETH(goto, 1),
     CHMETH(at, 1),
+    CHMETH(transfer, 1),
+    CHMETH(gtransfer, 1),
     CHMETH(otransfer, 1),
     CHMETH(force, 1),
     CHMETH(gforce, 1),
     CHMETH(vforce, 1),
     CHMETH(cast, 1),
     CHMETH(damage, 1),
+    CHMETH(remember, 1),
+    CHMETH(forget, 1),
+    CHMETH(delay, 1),
+    CHMETH(cancel, 1),
+    CHMETH(call, 1),
+    CHMETH(flee, 1),
     CHMETH(remove, 1),
     CHMETH(setact, 1),
     CHMETH(setvuln, 1),
