@@ -2207,6 +2207,9 @@ void act_new (const char *format, CHAR_DATA * ch, const void *arg1,
     static char *const he_she[] = { "it", "he", "she" };
     static char *const him_her[] = { "it", "him", "her" };
     static char *const his_her[] = { "its", "his", "her" };
+    
+    sh_int arg1_type = ACT_ARG_UNDEFINED;
+    sh_int arg2_type = ACT_ARG_UNDEFINED;
 
     char buf[MAX_STRING_LENGTH];
     char fname[MAX_INPUT_LENGTH];
@@ -2245,6 +2248,7 @@ void act_new (const char *format, CHAR_DATA * ch, const void *arg1,
             return;
 
         to = vch->in_room->people;
+        arg2_type = ACT_ARG_CHARACTER;
     }
 
     for (; to != NULL; to = to->next_in_room)
@@ -2296,13 +2300,19 @@ void act_new (const char *format, CHAR_DATA * ch, const void *arg1,
                         /* Thx alex for 't' idea */
                     case 't':
                     	if (arg1)
-                    		i = (char *) arg1;
+                        {
+                            i = (char *) arg1;
+                            arg1_type = ACT_ARG_TEXT;
+                        }
              			else
              				bug("Act: bad code $t for 'arg1'",0);
 			            break;
                     case 'T':
                     	if (arg2)
+                        {
                         	i = (char *) arg2;
+                            arg2_type = ACT_ARG_TEXT;
+                        }
                         else
                         	bug("Act: bad code $T for 'arg2'",0);
                         break;
@@ -2356,15 +2366,21 @@ void act_new (const char *format, CHAR_DATA * ch, const void *arg1,
                         break;
                     case 'p':
                     	if (to && obj1)
+                        {
                         	i = can_see_obj (to, obj1)
                             ? obj1->short_descr : "something";
+                            arg1_type = ACT_ARG_OBJ;
+                        }
                         else
                         	bug("Act: bad code $p for 'to' or 'obj1'",0);
                         break;
                     case 'P':
                     	if (to && obj2)
+                        {
                         	i = can_see_obj (to, obj2)
                             ? obj2->short_descr : "something";
+                            arg2_type = ACT_ARG_OBJ;
+                        }
                         else
                         	bug("Act: bad code $P for 'to' or 'obj2'",0);
                         break;
@@ -2377,6 +2393,7 @@ void act_new (const char *format, CHAR_DATA * ch, const void *arg1,
                         {
                             one_argument ((char *) arg2, fname);
                             i = fname;
+                            arg2_type = ACT_ARG_TEXT;
                         }
                         break;
                 }
@@ -2402,7 +2419,7 @@ void act_new (const char *format, CHAR_DATA * ch, const void *arg1,
 		if (to->desc && (to->desc->connected == CON_PLAYING))
 			write_to_buffer( to->desc, buffer, 0); /* changed to buffer to reflect prev. fix */
         else if (MOBtrigger)
-            mp_act_trigger (buf, to, ch, arg1, arg2, TRIG_ACT);
+            mp_act_trigger (buf, to, ch, arg1, arg1_type, arg2, arg2_type, TRIG_ACT);
     }
     return;
 }

@@ -784,7 +784,10 @@ void do_say (CHAR_DATA * ch, char *argument)
             mob_next = mob->next_in_room;
             if (IS_NPC (mob) && HAS_TRIGGER (mob, TRIG_SPEECH)
                 && mob->position == mob->pIndexData->default_pos)
-                mp_act_trigger (argument, mob, ch, NULL, NULL, TRIG_SPEECH);
+                mp_act_trigger (argument, mob, ch, 
+                        NULL, ACT_ARG_UNDEFINED,
+                        NULL, ACT_ARG_UNDEFINED,
+                        TRIG_SPEECH);
         }
     }
     return;
@@ -944,7 +947,10 @@ void do_tell (CHAR_DATA * ch, char *argument)
     victim->reply = ch;
 
     if (!IS_NPC (ch) && IS_NPC (victim) && HAS_TRIGGER (victim, TRIG_SPEECH))
-        mp_act_trigger (argument, victim, ch, NULL, NULL, TRIG_SPEECH);
+        mp_act_trigger (argument, victim, ch, 
+                NULL, ACT_ARG_UNDEFINED,
+                NULL, ACT_ARG_UNDEFINED,
+                TRIG_SPEECH);
 
     return;
 }

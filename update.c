@@ -449,13 +449,19 @@ void mobile_update (void)
             {
                 if (--ch->mprog_delay <= 0)
                 {
-                    mp_percent_trigger (ch, NULL, NULL, NULL, TRIG_DELAY);
+                    mp_percent_trigger (ch, NULL, 
+                            NULL, ACT_ARG_UNDEFINED,
+                            NULL, ACT_ARG_UNDEFINED,
+                            TRIG_DELAY);
                     continue;
                 }
             }
             if (HAS_TRIGGER (ch, TRIG_RANDOM))
             {
-                if (mp_percent_trigger (ch, NULL, NULL, NULL, TRIG_RANDOM))
+                if (mp_percent_trigger (ch, NULL, 
+                            NULL, ACT_ARG_UNDEFINED,
+                            NULL, ACT_ARG_UNDEFINED,
+                            TRIG_RANDOM))
                     continue;
             }
         }

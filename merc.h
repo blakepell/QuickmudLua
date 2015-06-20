@@ -2419,6 +2419,10 @@ void     act                 args( ( const char *format, CHAR_DATA *ch,
                                      const void *arg1, const void *arg2, int type ) );
 void     act_new             args( ( const char *format, CHAR_DATA *ch, 
                                      const void *arg1, const void *arg2, int type,
+#define ACT_ARG_UNDEFINED 0
+#define ACT_ARG_OBJ       1
+#define ACT_ARG_TEXT      2
+#define ACT_ARG_CHARACTER 3
                                      int min_pos) );
 void     printf_to_char      args( ( CHAR_DATA *, char *, ... ) );
 #define ptc printf_to_char
@@ -2616,11 +2620,16 @@ void    obj_cast_spell    args( ( int sn, int level, CHAR_DATA *ch,
 
 /* mob_prog.c */
 void    program_flow    args( ( sh_int vnum, char *source, CHAR_DATA *mob, CHAR_DATA *ch,
-                const void *arg1, const void *arg2 ) );
+                const void *arg1, sh_int arg1_type,
+                const void *arg2, sh_int arg2_type ) );
 void    mp_act_trigger    args( ( char *argument, CHAR_DATA *mob, CHAR_DATA *ch,
-                const void *arg1, const void *arg2, int type ) );
+                const void *arg1, sh_int arg1_type, 
+                const void *arg2, sh_int arg2_type,
+                int type ) );
 bool    mp_percent_trigger args( ( CHAR_DATA *mob, CHAR_DATA *ch,                 
-                const void *arg1, const void *arg2, int type ) );
+                const void *arg1, sh_int arg1_type,
+                const void *arg2, sh_int arg2_type,
+                int type ) );
 void    mp_bribe_trigger  args( ( CHAR_DATA *mob, CHAR_DATA *ch, int amount ) );
 bool    mp_exit_trigger   args( ( CHAR_DATA *ch, int dir ) );
 void    mp_give_trigger   args( ( CHAR_DATA *mob, CHAR_DATA *ch, OBJ_DATA *obj ) );

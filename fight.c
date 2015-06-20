@@ -92,7 +92,10 @@ void violence_update (void)
         if (IS_NPC (ch))
         {
             if (HAS_TRIGGER (ch, TRIG_FIGHT))
-                mp_percent_trigger (ch, victim, NULL, NULL, TRIG_FIGHT);
+                mp_percent_trigger (ch, victim, 
+                        NULL, ACT_ARG_UNDEFINED,
+                        NULL, ACT_ARG_UNDEFINED,
+                        TRIG_FIGHT);
             if (HAS_TRIGGER (ch, TRIG_HPCNT))
                 mp_hprct_trigger (ch, victim);
         }
@@ -738,7 +741,10 @@ bool damage (CHAR_DATA * ch, CHAR_DATA * victim, int dam, int dt,
             {
                 set_fighting (victim, ch);
                 if (IS_NPC (victim) && HAS_TRIGGER (victim, TRIG_KILL))
-                    mp_percent_trigger (victim, ch, NULL, NULL, TRIG_KILL);
+                    mp_percent_trigger (victim, ch, 
+                            NULL, ACT_ARG_UNDEFINED,
+                            NULL, ACT_ARG_UNDEFINED,
+                            TRIG_KILL);
             }
             if (victim->timer <= 4)
                 victim->position = POS_FIGHTING;
@@ -918,7 +924,10 @@ bool damage (CHAR_DATA * ch, CHAR_DATA * victim, int dam, int dt,
         if (IS_NPC (victim) && HAS_TRIGGER (victim, TRIG_DEATH))
         {
             victim->position = POS_STANDING;
-            mp_percent_trigger (victim, ch, NULL, NULL, TRIG_DEATH);
+            mp_percent_trigger (victim, ch, 
+                    NULL, ACT_ARG_UNDEFINED,
+                    NULL, ACT_ARG_UNDEFINED,
+                    TRIG_DEATH);
         }
 
         raw_kill (victim);
@@ -3234,7 +3243,10 @@ void do_surrender (CHAR_DATA * ch, char *argument)
 
     if (!IS_NPC (ch) && IS_NPC (mob)
         && (!HAS_TRIGGER (mob, TRIG_SURR)
-            || !mp_percent_trigger (mob, ch, NULL, NULL, TRIG_SURR)))
+            || !mp_percent_trigger (mob, ch, 
+                NULL, ACT_ARG_UNDEFINED,
+                NULL, ACT_ARG_UNDEFINED,
+                TRIG_SURR)))
     {
         act ("$N seems to ignore your cowardly act!", ch, NULL, mob, TO_CHAR);
         multi_hit (mob, ch, TYPE_UNDEFINED);

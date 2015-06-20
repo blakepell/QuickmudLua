@@ -217,7 +217,10 @@ void do_enter (CHAR_DATA * ch, char *argument)
          * for the followers before the char, but it's safer this way...
          */
         if (IS_NPC (ch) && HAS_TRIGGER (ch, TRIG_ENTRY))
-            mp_percent_trigger (ch, NULL, NULL, NULL, TRIG_ENTRY);
+            mp_percent_trigger (ch, NULL, 
+                    NULL, ACT_ARG_UNDEFINED,
+                    NULL, ACT_ARG_UNDEFINED,
+                    TRIG_ENTRY);
         if (!IS_NPC (ch))
             mp_greet_trigger (ch);
 
