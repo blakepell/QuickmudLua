@@ -65,7 +65,7 @@ void free_luaval( LUA_EXTRA_VAL *luaval );
 void cleanup_uds();
 
 /* moved to merc.h cause what if a file calls 
-   valid_CH without including lua_arclib.h?
+   valid_CH without including lua_romlib.h?
    It assumes int and doesn't work right.
    */
 /*

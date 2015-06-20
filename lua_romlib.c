@@ -4,7 +4,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 #include "merc.h"
-#include "lua_arclib.h"
+#include "lua_romlib.h"
 #include "lua_main.h"
 #include "olc.h"
 #include "tables.h"

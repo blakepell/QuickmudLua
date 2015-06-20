@@ -46,7 +46,7 @@ http://www.gammon.com.au/forum/?id=8015
 #include "tables.h"
 #include "lua_scripting.h"
 #include "olc.h"
-#include "lua_arclib.h"
+#include "lua_romlib.h"
 #include "lua_main.h"
 
 

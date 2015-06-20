@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "merc.h"
 #include "lua_main.h"
-#include "lua_arclib.h"
+#include "lua_romlib.h"
 #include "interp.h"
 
 void sorted_ctable_init( lua_State *LS );
