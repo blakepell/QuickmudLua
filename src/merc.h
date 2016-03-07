@@ -413,6 +413,7 @@ struct    weather_data
 #define CON_NOTE_EXPIRE			7
 #define CON_NOTE_TEXT			8
 #define CON_NOTE_FINISH			9
+#define CON_LUA_HANDLER         10
 
 
 /*
@@ -442,6 +443,9 @@ struct    descriptor_data
     void *      pEdit;         /* OLC */
     char **     pString;       /* OLC */
     int         editor;        /* OLC */
+
+    LUAREF      conhandler;
+
     /* lua interpreter */
     struct
     {
@@ -1478,6 +1482,7 @@ struct    kill_data
 #define WIZ_NEWBIE              (R)
 #define WIZ_PREFIX              (S)
 #define WIZ_SPAM                (T)
+#define WIZ_LUAERROR            (U)
 
 /*
  * Prototype for a mob.
@@ -1993,13 +1998,14 @@ struct  group_type
 #define TRIG_EXALL    (N)
 #define TRIG_DELAY    (O)
 #define TRIG_SURR    (P)
+#define TRIG_CALL    (Q)
 
 struct mprog_list
 {
     int            trig_type;
     char *        trig_phrase;
     sh_int        vnum;
-    char *          code;
+    MPROG_CODE *     script;
     MPROG_LIST *     next;
     bool        valid;
 };
@@ -2415,6 +2421,7 @@ void     write_to_buffer     args( ( DESCRIPTOR_DATA *d, const char *txt,
 void     send_to_desc        args( ( const char *txt, DESCRIPTOR_DATA *d ) );
 void     send_to_char        args( ( const char *txt, CHAR_DATA *ch ) );
 void     page_to_char        args( ( const char *txt, CHAR_DATA *ch ) );
+void     page_to_char_new    args( ( const char *txt, CHAR_DATA *ch, bool raw ) ); 
 void     act                 args( ( const char *format, CHAR_DATA *ch,
                                      const void *arg1, const void *arg2, int type ) );
 void     act_new             args( ( const char *format, CHAR_DATA *ch, 
@@ -2619,9 +2626,10 @@ void    obj_cast_spell    args( ( int sn, int level, CHAR_DATA *ch,
                     CHAR_DATA *victim, OBJ_DATA *obj ) );
 
 /* mob_prog.c */
-void    program_flow    args( ( sh_int vnum, char *source, CHAR_DATA *mob, CHAR_DATA *ch,
+void    program_flow    args( ( const char *text, bool is_lua, sh_int vnum, char *source, CHAR_DATA *mob, CHAR_DATA *ch,
                 const void *arg1, sh_int arg1_type,
-                const void *arg2, sh_int arg2_type ) );
+                const void *arg2, sh_int arg2_type,
+                int trig_type, int security ) );
 void    mp_act_trigger    args( ( char *argument, CHAR_DATA *mob, CHAR_DATA *ch,
                 const void *arg1, sh_int arg1_type, 
                 const void *arg2, sh_int arg2_type,
@@ -2635,6 +2643,11 @@ bool    mp_exit_trigger   args( ( CHAR_DATA *ch, int dir ) );
 void    mp_give_trigger   args( ( CHAR_DATA *mob, CHAR_DATA *ch, OBJ_DATA *obj ) );
 void     mp_greet_trigger  args( ( CHAR_DATA *ch ) );
 void    mp_hprct_trigger  args( ( CHAR_DATA *mob, CHAR_DATA *ch ) );
+bool get_mob_vnum_room (CHAR_DATA * ch, sh_int vnum);
+bool get_obj_vnum_room (CHAR_DATA * ch, sh_int vnum);
+CHAR_DATA *get_random_char(CHAR_DATA *ch);
+bool has_item (CHAR_DATA * ch, sh_int vnum, sh_int item_type, bool fWear);
+int count_people_room (CHAR_DATA * mob, int iFlag);
 
 /* mob_cmds.c */
 void    mob_interpret    args( ( CHAR_DATA *ch, char *argument ) );
@@ -2688,6 +2701,9 @@ char    *olc_ed_vnum    args( ( CHAR_DATA *ch ) );
 int    race_lookup    args( ( const char *name) );
 int    item_lookup    args( ( const char *name) );
 int    liq_lookup    args( ( const char *name) );
+
+/* lua_main.c */
+void lua_con_handler( DESCRIPTOR_DATA *d, const char *argument );
 
 #undef    CD
 #undef    MID
@@ -2755,7 +2771,7 @@ extern        ROOM_INDEX_DATA *    room_index_hash [MAX_KEY_HASH];
 
 
 /*
- * Lua stuff (Nick Gammon)
+ * Lua stuff
  */
 
 void open_lua  ();  /* set up Lua state */

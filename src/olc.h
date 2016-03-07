@@ -107,6 +107,7 @@ struct	editor_cmd_type
 /*
  * Utils.
  */
+struct flag_type;
 AREA_DATA *get_vnum_area	args ( ( int vnum ) );
 AREA_DATA *get_area_data	args ( ( int vnum ) );
 int flag_value			args ( ( const struct flag_type *flag_table,

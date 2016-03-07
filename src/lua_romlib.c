@@ -10,6 +10,10 @@
 #include "tables.h"
 #include "mob_cmds.h"
 #include "interp.h"
+#include "lookup.h"
+
+const char *flag_bit_name( const struct flag_type flag_table[], int bit);
+
 
 /* for iterating */
 LUA_OBJ_TYPE *type_list [] =
@@ -118,7 +122,6 @@ typedef struct glob_type
 
 struct glob_type glob_table[];
 
-#if 0
 static int utillib_func (lua_State *LS, const char *funcname)
 {
     int narg=lua_gettop(LS);
@@ -158,34 +161,18 @@ static int utillib_format_list( lua_State *LS )
 
 static int utillib_strlen_color( lua_State *LS )
 {
-   lua_pushinteger( LS,
-           strlen_color( luaL_checkstring( LS, 1) ) );
-   return 1;
+    return utillib_func( LS, "strlen_color");
 }
 
 static int utillib_truncate_color_string( lua_State *LS )
 {
-    lua_pushstring( LS,
-            truncate_color_string( 
-                check_string( LS, 1, MSL),
-                luaL_checkinteger( LS, 2 )
-            ) 
-    );
-    return 1;
+    return utillib_func( LS, "truncate_color_string");
 }
 
 static int utillib_format_color_string( lua_State *LS )
 {
-    lua_pushstring( LS,
-            format_color_string(
-                check_string( LS, 1, MSL),
-                luaL_checkinteger( LS, 2 )
-            )
-    );
-    return 1;
+    return utillib_func( LS, "format_color_string");
 }
-
-#endif
 
 static int glob_sendtochar (lua_State *LS)
 {
@@ -710,6 +697,7 @@ static int glob_getrandomroom ( lua_State *LS)
 #define GFUN( fun, sec ) { NULL, #fun , glob_ ## fun , sec, STS_ACTIVE }
 #define LFUN( lib, fun, sec) { #lib, #fun, lib ## lib_ ## fun , sec, STS_ACTIVE}
 #define DBGF( fun ) LFUN( dbg, fun, 9 )
+#define UTILF( fun ) LFUN( util, fun, 0)
 
 GLOB_TYPE glob_table[] =
 {
@@ -740,6 +728,15 @@ GLOB_TYPE glob_table[] =
     GFUN(getglobals,    SEC_NOSCRIPT),
 
     DBGF(show),
+
+    UTILF(trim),
+    UTILF(convert_time),
+    UTILF(capitalize),
+    UTILF(pluralize),
+    UTILF(format_list),
+    UTILF(strlen_color),
+    UTILF(truncate_color_string),
+    UTILF(format_color_string),
 
     /* SEC_NOSCRIPT means aren't available for prog scripts */
 
@@ -849,63 +846,74 @@ void register_globals( lua_State *LS )
 /* end global section */
 
 /* common section */
-static int set_flag( lua_State *LS,
-        const char *funcname, 
-        const struct flag_type *flagtbl, 
-        long *flagvar )
-{
-    const char *argument = check_string( LS, 2, MIL);
-    bool set = TRUE;
-    if (!lua_isnone( LS, 3 ) )
-    {
-        set = lua_toboolean( LS, 3 );
-    }
-    
-    int flag=flag_lookup( argument, flagtbl );
-    if ( flag == NO_FLAG )
-        luaL_error(LS, "'%s' invalid flag for %s", argument, funcname);
-        
-    if ( set )
-        SET_BIT( *flagvar, flag );
-    else
-        REMOVE_BIT( *flagvar, flag);
-        
-    return 0;
+#define makefunc( FUNC, INT_TYPE) \
+static int FUNC( lua_State *LS, \
+                 const char *funcname, \
+                 const struct flag_type *flagtbl, \
+                 INT_TYPE *flagvar )\
+{ \
+    const char *argument = check_string( LS, 2, MIL); \
+    bool set = TRUE; \
+    if (!lua_isnone( LS, 3 ) ) \
+    { \
+        set = lua_toboolean( LS, 3 ); \
+    } \
+    \
+    int flag=flag_lookup( argument, flagtbl ); \
+    if ( flag == NO_FLAG ) \
+        luaL_error(LS, "'%s' invalid flag for %s", argument, funcname); \
+    \
+    if ( set ) \
+        SET_BIT( *flagvar, flag ); \
+    else \
+        REMOVE_BIT( *flagvar, flag); \
+    \
+    return 0; \
 }
 
-static int check_flag( lua_State *LS, 
-        const char *funcname, 
-        const struct flag_type *flagtbl, 
-        long flagvar)
-{
-    if (lua_isnone( LS, 2)) /* called with no string arg */
-    {
-        /* return array of currently set flags */
-        int index=1;
-        lua_newtable( LS );
-        int i;
-        for ( i=0 ; flagtbl[i].name ; i++)
-        {
+makefunc( set_long_flag, long );
+makefunc( set_int_flag, int );
+makefunc( set_sh_int_flag, sh_int );
+#undef makefunc
 
-            if ( IS_SET(flagvar, flagtbl[i].bit) )
-            {
-                lua_pushstring( LS, flagtbl[i].name);
-                lua_rawseti(LS, -2, index++);
-            }
-        }
-        return 1;
-    }
-    
-    const char *argument = check_fstring( LS, 2, MIL);
-    int flag=NO_FLAG;
-       
-    if ((flag=flag_lookup(argument, flagtbl)) == NO_FLAG)
-        luaL_error(LS, "'%s' invalid flag for %s", argument, funcname);
-    
-    lua_pushboolean( LS, IS_SET( flagvar, flag ) );
 
-    return 1;
+#define makefunc( FUNC, INT_TYPE) \
+static int FUNC( lua_State *LS, \
+                 const char *funcname, \
+                 const struct flag_type *flagtbl, \
+                 INT_TYPE flagvar )\
+{ \
+    if (lua_isnone( LS, 2)) /* called with no string arg */ \
+    { \
+        /* return array of currently set flags */ \
+        int index=1; \
+        lua_newtable( LS ); \
+        int i; \
+        for ( i=0 ; flagtbl[i].name ; i++) \
+        { \
+            if ( IS_SET(flagvar, flagtbl[i].bit) ) \
+            { \
+                lua_pushstring( LS, flagtbl[i].name); \
+                lua_rawseti(LS, -2, index++); \
+            } \
+        } \
+        return 1; \
+    } \
+    \
+    const char *argument = check_fstring( LS, 2, MIL); \
+    int flag=NO_FLAG; \
+    \
+    if ((flag=flag_lookup(argument, flagtbl)) == NO_FLAG) \
+        luaL_error(LS, "'%s' invalid flag for %s", argument, funcname); \
+    \
+    lua_pushboolean( LS, IS_SET( flagvar, flag ) ); \
+    return 1; \
 }
+
+makefunc( check_long_flag, long );
+makefunc( check_int_flag, int);
+makefunc( check_sh_int_flag, sh_int );
+#undef makefunc
 
 /* macro the heck out of this stuff so we don't have to rewrite for OBJ_DATA and OBJ_INDEX_DATA */
 #define OBJVGT( funcname, funcbody ) \
@@ -1182,7 +1190,7 @@ OBJVM( funcname, \
     if (ud_obj->item_type != otype)\
         luaL_error( LS, #funcname " for %s only", item_name( otype ) );\
     \
-    return check_flag( LS, #funcname, flagtbl, ud_obj->value[ vind ] );\
+    return check_int_flag( LS, #funcname, flagtbl, ud_obj->value[ vind ] );\
 )
 
 OBJVM( apply,
@@ -1292,10 +1300,11 @@ static int CH_tprint ( lua_State *LS)
     lua_pushvalue( LS, 2);
     lua_call( LS, 1, 1 );
 
-    do_say( ud_ch, check_string(LS, -1, MIL));
+    do_say( ud_ch, (char *)check_string(LS, -1, MIL));
 
     return 0;
 }
+#if 0
 static int CH_savetbl (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -1316,7 +1325,6 @@ static int CH_savetbl (lua_State *LS)
     return 0;
 }
 
-#if 0
 static int CH_loadtbl (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -1397,7 +1405,7 @@ static int CH_loadprog (lua_State *LS)
 #define mpmethod( meth ) \
 static int CH_ ## meth (lua_State *LS) \
 {\
-    do_mp ## meth ( check_CH(LS, 1), check_string(LS, 2, MIL));\
+    do_mp ## meth ( check_CH(LS, 1), (char *)check_string(LS, 2, MIL));\
     return 0;\
 }
 
@@ -1434,7 +1442,7 @@ mpmethod( remove )
 
 static int CH_mdo (lua_State *LS)
 {
-    interpret( check_CH(LS, 1), check_fstring( LS, 2, MIL));
+    interpret( check_CH(LS, 1), (char *)check_fstring( LS, 2, MIL));
 
     return 0;
 }
@@ -1444,10 +1452,10 @@ static int CH_mobhere (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1); 
     const char *argument = check_fstring( LS, 2, MIL);
 
-    if ( is_number( argument ) )
-        lua_pushboolean( LS, (bool) get_mob_vnum_room( ud_ch, atoi(argument) ) ); 
+    if ( is_number( (char *)argument ) )
+        lua_pushboolean( LS, (bool) get_mob_vnum_room( ud_ch, atoi((char *)argument) ) ); 
     else
-        lua_pushboolean( LS,  (bool) (get_char_room( ud_ch, argument) != NULL) );
+        lua_pushboolean( LS,  (bool) (get_char_room( ud_ch, (char *)argument) != NULL) );
 
     return 1;
 }
@@ -1457,10 +1465,10 @@ static int CH_objhere (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_fstring( LS, 2, MIL);
 
-    if ( is_number( argument ) )
-        lua_pushboolean( LS,(bool) get_obj_vnum_room( ud_ch, atoi(argument) ) );
+    if ( is_number( (char *)argument ) )
+        lua_pushboolean( LS,(bool) get_obj_vnum_room( ud_ch, atoi((char *)argument) ) );
     else
-        lua_pushboolean( LS,(bool) (get_obj_here( ud_ch, argument) != NULL) );
+        lua_pushboolean( LS,(bool) (get_obj_here( ud_ch, (char *)argument) != NULL) );
 
     return 1;
 }
@@ -1470,7 +1478,7 @@ static int CH_mobexists (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1); 
     const char *argument = check_fstring( LS, 2, MIL);
 
-    lua_pushboolean( LS,(bool) (get_char_world( ud_ch, argument) != NULL) );
+    lua_pushboolean( LS,(bool) (get_char_world( ud_ch, (char *)argument) != NULL) );
 
     return 1;
 }
@@ -1480,7 +1488,7 @@ static int CH_objexists (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1); 
     const char *argument = check_fstring( LS, 2, MIL);
 
-    lua_pushboolean( LS, (bool) (get_obj_world( ud_ch, argument) != NULL) );
+    lua_pushboolean( LS, (bool) (get_obj_world( ud_ch, (char *)argument) != NULL) );
 
     return 1;
 }
@@ -1589,11 +1597,11 @@ static int CH_act (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     if (IS_NPC(ud_ch))
     {
-        return check_flag( LS, "act[NPC]", act_flags, ud_ch->act );
+        return check_long_flag( LS, "act[NPC]", act_flags, ud_ch->act );
     }
     else
     {
-        return check_flag( LS, "act[PC]", plr_flags, ud_ch->act );
+        return check_long_flag( LS, "act[PC]", plr_flags, ud_ch->act );
     }
 }
 
@@ -1602,7 +1610,7 @@ static int CH_setact (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "act[NPC]", act_flags, &ud_ch->act );
+        return set_long_flag( LS, "act[NPC]", act_flags, &ud_ch->act );
     }
     else
         return luaL_error( LS, "'setact' for NPC only." );
@@ -1612,13 +1620,13 @@ static int CH_setact (lua_State *LS)
 static int CH_offensive (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
-    return check_flag( LS, "offensive",off_flags, ud_ch->off_flags );
+    return check_long_flag( LS, "offensive",off_flags, ud_ch->off_flags );
 }
 
 static int CH_immune (lua_State *LS)
 { 
     CHAR_DATA * ud_ch = check_CH (LS, 1);
-    return check_flag( LS, "immune", imm_flags, ud_ch->imm_flags );
+    return check_long_flag( LS, "immune", imm_flags, ud_ch->imm_flags );
 }
 
 static int CH_setimmune (lua_State *LS)
@@ -1626,7 +1634,7 @@ static int CH_setimmune (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "immune", imm_flags, &ud_ch->imm_flags );
+        return set_long_flag( LS, "immune", imm_flags, &ud_ch->imm_flags );
     }
     else
         return luaL_error( LS, "'setimmune' for NPC only.");
@@ -1638,7 +1646,7 @@ static int CH_carries (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_string( LS, 2, MIL);
 
-    if ( is_number( argument ) )
+    if ( is_number( (char *)argument ) )
     {
         int vnum=atoi( argument );
 
@@ -1649,7 +1657,7 @@ static int CH_carries (lua_State *LS)
     else
     {
         lua_pushboolean(LS,
-                get_obj_carry(ud_ch, argument, ud_ch) != NULL);
+                get_obj_carry(ud_ch, (char *)argument, ud_ch) != NULL);
         return 1;
     }
 }
@@ -1659,10 +1667,10 @@ static int CH_wears (lua_State *LS)
     CHAR_DATA * ud_ch = check_CH (LS, 1);
     const char *argument = check_fstring( LS, 2, MIL);
 
-    if ( is_number( argument ) )
+    if ( is_number( (char *)argument ) )
         lua_pushboolean( LS, ud_ch != NULL && has_item( ud_ch, atoi(argument), -1, TRUE ) );
     else
-        lua_pushboolean( LS, ud_ch != NULL && (get_obj_wear( ud_ch, argument ) != NULL) );
+        lua_pushboolean( LS, ud_ch != NULL && (get_obj_wear( ud_ch, (char *)argument ) != NULL) );
 
     return 1;
 }
@@ -1690,7 +1698,7 @@ static int CH_say (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
 
-    do_say( ud_ch, check_fstring( LS, 2, MIL) );
+    do_say( ud_ch, (char *)check_fstring( LS, 2, MIL) );
     return 0;
 }
 
@@ -1867,7 +1875,7 @@ static int CH_destroy (lua_State *LS)
 static int CH_vuln (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
-    return check_flag( LS, "vuln", vuln_flags, ud_ch->vuln_flags );
+    return check_long_flag( LS, "vuln", vuln_flags, ud_ch->vuln_flags );
 }
 
 static int CH_setvuln (lua_State *LS)
@@ -1875,7 +1883,7 @@ static int CH_setvuln (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "vuln", vuln_flags, &ud_ch->vuln_flags );
+        return set_long_flag( LS, "vuln", vuln_flags, &ud_ch->vuln_flags );
     }
     else
         return luaL_error( LS, "'setvuln' for NPC only." );
@@ -1885,7 +1893,7 @@ static int CH_setvuln (lua_State *LS)
 static int CH_resist (lua_State *LS)
 {
     CHAR_DATA * ud_ch = check_CH (LS, 1);
-    return check_flag( LS, "resist", res_flags, ud_ch->res_flags );
+    return check_long_flag( LS, "resist", res_flags, ud_ch->res_flags );
 }
 
 static int CH_setresist (lua_State *LS)
@@ -1893,7 +1901,7 @@ static int CH_setresist (lua_State *LS)
     CHAR_DATA *ud_ch=check_CH(LS,1);
     if (IS_NPC(ud_ch))
     {
-        return set_flag( LS, "resist", res_flags, &ud_ch->res_flags );
+        return set_long_flag( LS, "resist", res_flags, &ud_ch->res_flags );
     }
     else
         return luaL_error( LS, "'setresist' for NPC only.");
@@ -2842,7 +2850,7 @@ static int OBJ_setexitflag( lua_State *LS)
     if (ud_obj->item_type != ITEM_PORTAL)
         return luaL_error(LS, "setexitflag for portal only");
 
-    return set_flag( LS, "exit_flags", exit_flags, &ud_obj->value[1] );
+    return set_int_flag( LS, "exit_flags", exit_flags, &ud_obj->value[1] );
 }
 
 #if 0
@@ -2992,13 +3000,13 @@ static int OBJ_oload (lua_State *LS)
 static int OBJ_extra( lua_State *LS)
 {
     OBJ_DATA *ud_obj = check_OBJ(LS, 1);
-    return check_flag( LS, "extra", extra_flags, ud_obj->extra_flags );
+    return check_int_flag( LS, "extra", extra_flags, ud_obj->extra_flags );
 }
 
 static int OBJ_wear( lua_State *LS)
 {
     OBJ_DATA *ud_obj = check_OBJ(LS, 1);
-    return check_flag( LS, "wear", wear_flags, ud_obj->wear_flags );
+    return check_int_flag( LS, "wear", wear_flags, ud_obj->wear_flags );
 }
 
 static int OBJ_echo( lua_State *LS)
@@ -3054,7 +3062,7 @@ static int OBJ_setweaponflag( lua_State *LS)
     if (ud_obj->item_type != ITEM_WEAPON)
         return luaL_error(LS, "setweaponflag for weapon only");
 
-    return set_flag( LS, "weapon_type2", weapon_type2, &ud_obj->value[4]);
+    return set_int_flag( LS, "weapon_type2", weapon_type2, &(ud_obj->value[4]));
 }
 
 static int OBJ_get_name (lua_State *LS)
@@ -3553,7 +3561,7 @@ static int AREA_loadprog (lua_State *LS)
 static int AREA_flag( lua_State *LS)
 {
     AREA_DATA *ud_area = check_AREA(LS, 1);
-    return check_flag( LS, "area", area_flags, ud_area->area_flags );
+    return check_int_flag( LS, "area", area_flags, ud_area->area_flags );
 }
 
 static int AREA_reset( lua_State *LS)
@@ -3837,7 +3845,7 @@ static int ROOM_oload (lua_State *LS)
 static int ROOM_flag( lua_State *LS)
 {
     ROOM_INDEX_DATA *ud_room = check_ROOM(LS, 1);
-    return check_flag( LS, "room", room_flags, ud_room->room_flags );
+    return check_int_flag( LS, "room", room_flags, ud_room->room_flags );
 }
 
 static int ROOM_reset( lua_State *LS)
@@ -4171,13 +4179,13 @@ static const LUA_PROP_TYPE ROOM_method_table [] =
 static int EXIT_flag (lua_State *LS)
 {
     EXIT_DATA *ed=check_EXIT( LS, 1 );
-    return check_flag( LS, "exit", exit_flags, ed->exit_info );
+    return check_sh_int_flag( LS, "exit", exit_flags, ed->exit_info );
 }
 
 static int EXIT_setflag( lua_State *LS)
 {
     EXIT_DATA *ud_exit = check_EXIT(LS, 1);
-    return set_flag( LS, "exit", exit_flags, ud_exit->exit_info); 
+    return set_sh_int_flag( LS, "exit", exit_flags, &(ud_exit->exit_info)); 
 }
 
 static int EXIT_lock( lua_State *LS)
@@ -4240,8 +4248,12 @@ static int EXIT_open( lua_State *LS)
 static int EXIT_get_toroom (lua_State *LS)
 {
     EXIT_DATA *ud_exit=check_EXIT(LS,1);
-    if ( !push_ROOM( LS, ud_exit->u1.to_room ))
+    ROOM_INDEX_DATA *room = ud_exit->u1.to_room;
+
+    if ( !room || !push_ROOM( LS, ud_exit->u1.to_room ))
+    {
         return 0;
+    }
     else
         return 1;
 }
@@ -4341,13 +4353,13 @@ static const LUA_PROP_TYPE RESET_method_table [] =
 static int OBJPROTO_wear( lua_State *LS)
 {
     OBJ_INDEX_DATA *ud_objp = check_OBJPROTO(LS, 1);
-    return check_flag( LS, "wear", wear_flags, ud_objp->wear_flags );
+    return check_int_flag( LS, "wear", wear_flags, ud_objp->wear_flags );
 }
 
 static int OBJPROTO_extra( lua_State *LS)
 {
     OBJ_INDEX_DATA *ud_objp = check_OBJPROTO(LS, 1);
-    return check_flag( LS, "extra", extra_flags, ud_objp->extra_flags );
+    return check_int_flag( LS, "extra", extra_flags, ud_objp->extra_flags );
 }
 
 static int OBJPROTO_get_name (lua_State *LS)
@@ -4564,37 +4576,37 @@ static const LUA_PROP_TYPE OBJPROTO_method_table [] =
 static int MOBPROTO_affected (lua_State *LS)
 {
     MOB_INDEX_DATA *ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "affected", affect_flags, ud_mobp->affected_by );
+    return check_long_flag( LS, "affected", affect_flags, ud_mobp->affected_by );
 }
 
 static int MOBPROTO_act (lua_State *LS)
 {
     MOB_INDEX_DATA * ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "act", act_flags, ud_mobp->act );
+    return check_long_flag( LS, "act", act_flags, ud_mobp->act );
 }
 
 static int MOBPROTO_offensive (lua_State *LS)
 {
     MOB_INDEX_DATA * ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "offensive", off_flags, ud_mobp->off_flags );
+    return check_long_flag( LS, "offensive", off_flags, ud_mobp->off_flags );
 }
 
 static int MOBPROTO_immune (lua_State *LS)
 {
     MOB_INDEX_DATA * ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "immune", imm_flags, ud_mobp->imm_flags );
+    return check_long_flag( LS, "immune", imm_flags, ud_mobp->imm_flags );
 }
 
 static int MOBPROTO_vuln (lua_State *LS)
 {
     MOB_INDEX_DATA * ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "vuln", vuln_flags, ud_mobp->vuln_flags );
+    return check_long_flag( LS, "vuln", vuln_flags, ud_mobp->vuln_flags );
 }
 
 static int MOBPROTO_resist (lua_State *LS)
 {
     MOB_INDEX_DATA * ud_mobp = check_MOBPROTO (LS, 1);
-    return check_flag( LS, "resist", res_flags, ud_mobp->res_flags );
+    return check_long_flag( LS, "resist", res_flags, ud_mobp->res_flags );
 }
 
 #define MPGETSTR( field, val, hsumm, hinfo ) static int MOBPROTO_get_ ## field (lua_State *LS)\
@@ -4989,9 +5001,7 @@ static int MTRIG_get_trigphrase ( lua_State *LS )
 static int MTRIG_get_prog ( lua_State *LS )
 {
     MPROG_LIST *ud_mpl=check_MTRIG(LS,1);
-
-    lua_pushstring( LS,
-            ud_mpl->code);
+    push_MPROG(LS, ud_mpl->script);
     return 1;
 }    
 
@@ -5055,6 +5065,58 @@ static const LUA_PROP_TYPE HELP_method_table [] =
 /* end HELP section */
 
 /* DESCRIPTOR section */
+static int DESCRIPTOR_get_constate( lua_State *LS )
+{
+    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
+
+    int state=ud_d->connected;
+
+    const char *name = name_lookup( state, con_states );
+
+    if (!name)
+    {
+        bugf( "Unrecognized con state: %d", state );
+        lua_pushstring( LS, "ERROR" );
+    }
+    else
+    {
+        lua_pushstring( LS, name );
+    }
+    return 1;
+}
+
+static int DESCRIPTOR_set_constate( lua_State *LS )
+{
+    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
+    const char *name=check_string(LS, 2, MIL);
+
+    int state=flag_lookup( name, con_states );
+
+    if ( state == -1 )
+        return luaL_error( LS, "No such constate: %s", name );
+
+    if (!is_settable(state, con_states))
+        return luaL_error( LS, "constate cannot be set to %s", name );
+
+    ud_d->connected = state;
+    return 0;
+}
+
+static int DESCRIPTOR_get_inbuf( lua_State *LS )
+{
+    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
+    lua_pushstring( LS, ud_d->inbuf);
+    return 1;
+}
+
+static int DESCRIPTOR_set_inbuf( lua_State *LS )
+{
+    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
+    const char *arg=check_string( LS, 2, 4 * MAX_INPUT_LENGTH );
+
+    strcpy( ud_d->inbuf, arg );
+    return 0;
+}
 static int DESCRIPTOR_get_character( lua_State *LS )
 {
     DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1 );
@@ -5069,14 +5131,42 @@ static int DESCRIPTOR_get_character( lua_State *LS )
         return 0;
 }
 
+static int DESCRIPTOR_get_conhandler( lua_State *LS )
+{
+    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
+
+    if (!is_set_ref(ud_d->conhandler))
+        return 0;
+
+    push_ref( LS, ud_d->conhandler);
+    return 1;
+}
+
+static int DESCRIPTOR_set_conhandler( lua_State *LS )
+{
+    DESCRIPTOR_DATA *ud_d=check_DESCRIPTOR( LS, 1);
+
+    if (is_set_ref(ud_d->conhandler))
+        release_ref( LS, &ud_d->conhandler);
+
+    save_ref( LS, 2, &ud_d->conhandler);
+    return 0;
+}
+
 static const LUA_PROP_TYPE DESCRIPTOR_get_table [] =
 {
     GETP( DESCRIPTOR, character, 0 ),
+    GETP( DESCRIPTOR, constate, SEC_NOSCRIPT ),
+    GETP( DESCRIPTOR, inbuf, SEC_NOSCRIPT ),
+    GETP( DESCRIPTOR, conhandler, SEC_NOSCRIPT ),
     ENDPTABLE
 };
 
 static const LUA_PROP_TYPE DESCRIPTOR_set_table [] =
 {
+    SETP( DESCRIPTOR, constate, SEC_NOSCRIPT),
+    SETP( DESCRIPTOR, inbuf, SEC_NOSCRIPT),
+    SETP( DESCRIPTOR, conhandler, SEC_NOSCRIPT),
     ENDPTABLE
 };
 

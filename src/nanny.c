@@ -739,21 +739,25 @@ void nanny (DESCRIPTOR_DATA * d, char *argument)
 			handle_con_note_finish (d, argument);
 			break;
 
+        case CON_LUA_HANDLER:
+            lua_con_handler(d, argument);
+            break;
+
         case CON_READ_MOTD:
             if (ch->pcdata == NULL || ch->pcdata->pwd[0] == '\0')
             {
                 write_to_buffer (d, "Warning! Null password!\n\r", 0);
                 write_to_buffer (d,
-                                 "Please report old password with bug.\n\r",
-                                 0);
+                        "Please report old password with bug.\n\r",
+                        0);
                 write_to_buffer (d,
-                                 "Type 'password null <new password>' to fix.\n\r",
-                                 0);
+                        "Type 'password null <new password>' to fix.\n\r",
+                        0);
             }
 
             write_to_buffer (d,
-                             "\n\rWelcome to ROM 2.4.  Please don't feed the mobiles!\n\r",
-                             0);
+                    "\n\rWelcome to ROM 2.4.  Please don't feed the mobiles!\n\r",
+                    0);
             ch->next = char_list;
             char_list = ch;
             d->connected = CON_PLAYING;
@@ -761,10 +765,10 @@ void nanny (DESCRIPTOR_DATA * d, char *argument)
 
             if (ch->level == 0)
             {
-		if(mud_ansicolor)
-                	SET_BIT (ch->act, PLR_COLOUR);
-		if(mud_telnetga)
-			SET_BIT (ch->comm, COMM_TELNET_GA);
+                if(mud_ansicolor)
+                    SET_BIT (ch->act, PLR_COLOUR);
+                if(mud_telnetga)
+                    SET_BIT (ch->comm, COMM_TELNET_GA);
 
                 ch->perm_stat[class_table[ch->class].attr_prime] += 3;
 
@@ -776,12 +780,12 @@ void nanny (DESCRIPTOR_DATA * d, char *argument)
                 ch->train = 3;
                 ch->practice = 5;
                 sprintf (buf, "the %s", title_table[ch->class][ch->level]
-                         [ch->sex == SEX_FEMALE ? 1 : 0]);
+                        [ch->sex == SEX_FEMALE ? 1 : 0]);
                 set_title (ch, buf);
 
                 do_function (ch, &do_outfit, "");
                 obj_to_char (create_object (get_obj_index (OBJ_VNUM_MAP), 0),
-                             ch);
+                        ch);
 
                 char_to_room (ch, get_room_index (ROOM_VNUM_SCHOOL));
                 send_to_char ("\n\r", ch);
@@ -811,10 +815,10 @@ void nanny (DESCRIPTOR_DATA * d, char *argument)
             {
                 char_to_room (ch->pet, ch->in_room);
                 act ("$n has entered the game.", ch->pet, NULL, NULL,
-                     TO_ROOM);
+                        TO_ROOM);
             }
 
-			send_to_char("\n", ch);
+            send_to_char("\n", ch);
             do_function (ch, &do_board, "");
             break;
     }

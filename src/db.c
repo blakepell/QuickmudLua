@@ -1597,7 +1597,7 @@ void fix_mobprogs (void)
             for (list = pMobIndex->mprogs; list != NULL; list = list->next)
             {
                 if ((prog = get_mprog_index (list->vnum)) != NULL)
-                    list->code = prog->code;
+                    list->script = prog;
                 else
                 {
                     bug ("Fix_mobprogs: code vnum %d not found.", list->vnum);

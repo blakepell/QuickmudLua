@@ -25,6 +25,7 @@
 #include "merc.h"
 #include "tables.h"
 #include "olc.h"
+#include "lua_scripting.h"
 
 char *string_linedel (char *, int);
 char *string_lineadd (char *, char *, int);
@@ -231,24 +232,14 @@ void string_add (CHAR_DATA * ch, char *argument)
     {
         if (ch->desc->editor == ED_MPCODE)
         {                        /* for the mobprogs */
-            MOB_INDEX_DATA *mob;
-            int hash;
-            MPROG_LIST *mpl;
             MPROG_CODE *mpc;
 
             EDIT_MPCODE (ch, mpc);
+            if (mpc->is_lua)
+            {
+                check_mprog( g_mud_LS, mpc->vnum, mpc->code);
+            }
 
-            if (mpc != NULL)
-                for (hash = 0; hash < MAX_KEY_HASH; hash++)
-                    for (mob = mob_index_hash[hash]; mob; mob = mob->next)
-                        for (mpl = mob->mprogs; mpl; mpl = mpl->next)
-                            if (mpl->vnum == mpc->vnum)
-                            {
-                                sprintf (buf, "Editting mob %d.\n\r",
-                                         mob->vnum);
-                                send_to_char (buf, ch);
-                                mpl->code = mpc->code;
-                            }
         }
 
         ch->desc->pString = NULL;

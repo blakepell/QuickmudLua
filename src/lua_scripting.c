@@ -20,13 +20,27 @@
 #define TEXT2_ARG "text2"
 #define VICTIM_ARG "victim"
 
+
+
+static void script_error(char *fmt, ...)
+{
+    char buf[2 * MSL];
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(buf, fmt, args);
+    va_end(args);
+
+    log_string(buf);
+    wiznet(buf, NULL, NULL, WIZ_LUAERROR, 0, 0);
+}
+
 bool lua_load_mprog( lua_State *LS, int vnum, const char *code)
 {
     char buf[MAX_SCRIPT_LENGTH + MSL]; /* Allow big strings from loadscript */
 
     if ( strlen(code) >= MAX_SCRIPT_LENGTH )
     {
-        bugf("MPROG script %d exceeds %d characters.",
+        script_error("MPROG script %d exceeds %d characters.",
                 vnum, MAX_SCRIPT_LENGTH);
         return FALSE;
     }
@@ -42,7 +56,7 @@ bool lua_load_mprog( lua_State *LS, int vnum, const char *code)
     if (luaL_loadstring ( LS, buf) ||
             CallLuaWithTraceBack ( LS, 0, 1))
     {
-        bugf ( "LUA mprog error loading vnum %d:\n %s",
+        script_error( "LUA mprog error loading vnum %d:\n %s",
                 vnum,
                 lua_tostring( LS, -1));
 
@@ -64,6 +78,7 @@ void lua_mob_program( const char *text, int pvnum, const char *source,
         CHAR_DATA *mob, CHAR_DATA *ch, 
         const void *arg1, sh_int arg1type, 
         const void *arg2, sh_int arg2type,
+        int trig_type,
         int security ) 
 
 {
@@ -76,7 +91,7 @@ void lua_mob_program( const char *text, int pvnum, const char *source,
     }
     if (lua_isnil(g_mud_LS, -1) )
     {
-        bugf("push_CH pushed nil to lua_mob_program");
+        script_error("push_CH pushed nil to lua_mob_program");
         return;
     }
 
@@ -88,7 +103,7 @@ void lua_mob_program( const char *text, int pvnum, const char *source,
     int error=CallLuaWithTraceBack (g_mud_LS, 2, 1) ;
     if (error > 0 )
     {
-        bugf ( "LUA error for mob_program_setup:\n %s",
+        script_error( "LUA error for mob_program_setup:\n %s",
                 lua_tostring(g_mud_LS, -1));
     } 
 
@@ -139,7 +154,7 @@ void lua_mob_program( const char *text, int pvnum, const char *source,
     error=CallLuaWithTraceBack (g_mud_LS, NUM_MPROG_ARGS, 0) ;
     if (error > 0 )
     {
-        bugf ( "LUA mprog error for %s(%d), mprog %d:\n %s",
+        script_error( "LUA mprog error for %s(%d), mprog %d:\n %s",
                 mob->name,
                 mob->pIndexData ? mob->pIndexData->vnum : 0,
                 pvnum,

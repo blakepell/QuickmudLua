@@ -184,6 +184,65 @@ function format_list(separator, ...)
   end
 end
 
+function strlen_color(str)
+  local cnt = 0
+  local was_bracket=false
+
+  for ind=1,str:len() do
+    local c = str:sub(ind,ind)
+    
+    if was_bracket then
+      if c == "{" then
+        cnt = cnt + 1
+      end
+      was_bracket = false
+    else
+      cnt = cnt + 1
+    end
+  end
+
+  return cnt
+end
+
+function truncate_color_string(str, limit)
+  if (strlen_color(str) <= limit) then
+    return str
+  end
+
+  local rtn = {}
+  local len=0
+  local ind = 1
+  
+  while ind <= limit do
+    rtn[ind] = str:sub(ind,ind) 
+    len = len + 1
+
+    if rtn[ind] == '{' then
+      ind = ind + 1
+      rtn[ind] = str:sub(ind,ind)
+
+      if not(rtn[ind] == '{') then
+        len = len-1
+      end
+    end
+
+    ind = ind + 1
+  end
+
+  return table.concat(rtn)
+end
+
+function format_color_string(str, width)
+  local lencolor = strlen_color(str)
+
+  if (lencolor > width) then
+    return truncate_color_string(str, width)
+  elseif (lencolor == width) then
+    return str
+  end
+
+  return str..(" "):rep(width-lencolor)
+end
 
 
 return P

@@ -35,6 +35,18 @@
 #include "merc.h"
 #include "tables.h"
 
+
+bool is_settable( int flag, const struct flag_type *flag_table )
+{
+    int i;
+
+    for ( i = 0; flag_table[i].name != NULL; i++ )
+    if ( flag_table[i].bit == flag )
+        return flag_table[i].settable;
+
+    return FALSE;
+}
+
 /* for clans */
 const struct clan_type clan_table[MAX_CLAN] = {
     /*  name,       who entry,  death-transfer room,    independent */
@@ -312,6 +324,7 @@ const struct flag_type mprog_flags[] = {
     {"exall", TRIG_EXALL, TRUE},
     {"delay", TRIG_DELAY, TRUE},
     {"surr", TRIG_SURR, TRUE},
+    {"call", TRIG_CALL, FALSE},
     {NULL, 0, TRUE}
 };
 
@@ -747,4 +760,33 @@ const struct bit_type bitvector_type[] = {
     {res_flags, "res"},
     {vuln_flags, "vuln"},
     {weapon_type2, "weapon"}
+};
+
+const struct flag_type con_states [] = 
+{
+    {"get_name",    CON_GET_NAME,   FALSE},
+    {"get_old_password", CON_GET_OLD_PASSWORD, FALSE},
+    {"confirm_new_name", CON_CONFIRM_NEW_NAME, FALSE},
+    {"get_new_password", CON_GET_NEW_PASSWORD, FALSE},
+    {"confirm_new_password", CON_CONFIRM_NEW_PASSWORD, FALSE},
+    {"ansi", CON_ANSI, FALSE},
+    {"get_telnetga", CON_GET_TELNETGA, FALSE},
+    {"get_new_race", CON_GET_NEW_RACE, FALSE},
+    {"get_new_sex", CON_GET_NEW_SEX, FALSE},
+    {"get_new_class", CON_GET_NEW_CLASS, FALSE},
+    {"get_aligment", CON_GET_ALIGNMENT, FALSE},
+    {"default_choice", CON_DEFAULT_CHOICE, FALSE},
+    {"gen_groups", CON_GEN_GROUPS, FALSE},
+    {"pick_weapon", CON_PICK_WEAPON, FALSE},
+    {"playing", CON_PLAYING, TRUE},
+    {"read_imotd", CON_READ_IMOTD, FALSE},
+    {"read_motd", CON_READ_MOTD, FALSE},
+    {"break_connect", CON_BREAK_CONNECT, FALSE},
+    {"copyover_recover", CON_COPYOVER_RECOVER, FALSE},
+    {"note_to", CON_NOTE_TO, FALSE},
+    {"note_subject", CON_NOTE_SUBJECT, FALSE},
+    {"note_expire", CON_NOTE_EXPIRE, FALSE},
+    {"note_text", CON_NOTE_TEXT, FALSE},
+    {"note_finish", CON_NOTE_FINISH, FALSE},
+    {"lua_handler", CON_LUA_HANDLER, TRUE}
 };

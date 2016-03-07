@@ -64,16 +64,8 @@ Types:
     exit            - EXITs (includes 'dir', 'area', and 'room')
     reset           - RESETs (includes 'area' and 'room')
     help            - HELPs
-
-    mprog   - PROGs (all mprogs, includes 'area')
-    oprog   - PROGS (all oprogs, includes 'area')
-    aprog   - PROGs (all aprogs, includes 'area')
-    rprog   - PROGs (all rprogs, includes 'area')
-
-    mtrig   - MTRIGs (all mprog triggers, includes 'area' and 'mobproto')
-    otrig   - OTRIGs (all oprog triggers, includes 'area' and 'objproto')
-    atrig   - ATRIGs (all aprog triggers, includes 'area')
-    rtrig   - RTRIGs (all rprog triggers, includes 'area' and 'room')
+    mprog           - MPROGs (all mprogs, includes 'area')
+    mtrig           - MTRIGs (all mprog triggers, includes 'area' and 'mobproto')
 
 
 Selection:
@@ -108,8 +100,8 @@ Notes:
 
     For types listed above with "includes" in the description, these are variables
     included in the query (available for selection/filter/sort) that are not
-    fields of the specified object type by default. For instance, PROG type does
-    not have a field called 'area' but for the purposes of PROG queries it is
+    fields of the specified object type by default. For instance, MPROG type does
+    not have a field called 'area' but for the purposes of MPROG queries it is
     accessible.
 
 Examples:
@@ -134,7 +126,7 @@ local lqtbl={
 
     area={ 
         getfun=getarealist,
-        default_sel="name"
+        default_sel={"name"}
     },
 
     op={
@@ -186,7 +178,6 @@ local lqtbl={
         default_sel={"area.name","vnum","name"}
     },
 
-
     reset={
         getfun=function()
             local resets={}
@@ -226,55 +217,13 @@ local lqtbl={
             end
             return exits
         end,
-        default_sel={"room.vnum","dir","toroom.vnum"}
+        default_sel={"room.vnum","dir","(toroom and toroom.vnum) as dest"}
     },
     mprog={
         getfun=function()
             local progs={}
             for _,area in pairs(getarealist()) do
                 for _,prog in pairs(area.mprogs) do
-                    table.insert( progs,
-                            setmetatable( { ["area"]=area}, {__index=prog}) )
-                end
-            end
-            return progs
-        end,
-        default_sel={"vnum"}
-    },
-
-    oprog={
-        getfun=function()
-            local progs={}
-            for _,area in pairs(getarealist()) do
-                for _,prog in pairs(area.oprogs) do
-                    table.insert( progs,
-                            setmetatable( { ["area"]=area}, {__index=prog}) )
-                end
-            end
-            return progs
-        end,
-        default_sel={"vnum"}
-    },
-
-    aprog={
-        getfun=function()
-            local progs={}
-            for _,area in pairs(getarealist()) do
-                for _,prog in pairs(area.aprogs) do
-                    table.insert( progs,
-                            setmetatable( { ["area"]=area}, {__index=prog}) )
-                end
-            end
-            return progs
-        end,
-        default_sel={"vnum"}
-    },
-
-    rprog={
-        getfun=function()
-            local progs={}
-            for _,area in pairs(getarealist()) do
-                for _,prog in pairs(area.rprogs) do
                     table.insert( progs,
                             setmetatable( { ["area"]=area}, {__index=prog}) )
                 end
@@ -306,72 +255,6 @@ local lqtbl={
             "prog.vnum"
         }
     },
-    otrig={
-        getfun=function()
-            local trigs={}
-            for _,area in pairs(getarealist()) do
-                for _,op in pairs(area.objprotos) do
-                    for _,trig in pairs(op.otrigs) do
-                        table.insert( trigs,
-                                setmetatable( { ["area"]=area, ["objproto"]=op },
-                                    {__index=trig}) )
-                    end
-                end
-            end
-            return trigs
-        end,
-        default_sel={
-            "objproto.vnum",
-            "objproto.shortdescr",
-            "trigtype",
-            "trigphrase",
-            "prog.vnum"
-        }
-    },
-   
-    atrig={
-        getfun=function()
-            local trigs={}
-            for _,area in pairs(getarealist()) do
-                for _,trig in pairs(area.atrigs) do
-                    table.insert( trigs,
-                            setmetatable( { ["area"]=area },
-                                {__index=trig}) )
-                end
-            end
-            return trigs
-        end,
-        default_sel={
-            "area.name",
-            "trigtype",
-            "trigphrase",
-            "prog.vnum"
-        }
-    },
-    
-    rtrig={
-        getfun=function()
-            local trigs={}
-            for _,area in pairs(getarealist()) do
-                for _,room in pairs(area.rooms) do
-                    for _,trig in pairs(room.rtrigs) do
-                        table.insert( trigs,
-                                setmetatable( { ["area"]=area, ["room"]=room },
-                                    {__index=trig}) )
-                    end
-                end
-            end
-            return trigs
-        end,
-        default_sel={
-            "room.vnum",
-            "room.name",
-            "trigtype",
-            "trigphrase",
-            "prog.vnum"
-        }
-    },
-
     help={
         getfun=gethelplist,
         default_sel={"level","keywords"}

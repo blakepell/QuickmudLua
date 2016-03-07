@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include "merc.h"
 #include "mob_cmds.h"
+#include "lua_main.h"
 
 DECLARE_DO_FUN (do_look);
 extern ROOM_INDEX_DATA *find_location (CHAR_DATA *, char *);
@@ -1249,9 +1250,10 @@ void do_mpcall (CHAR_DATA * ch, char *argument)
     argument = one_argument (argument, arg);
     if (arg[0] != '\0')
         obj2 = get_obj_here (ch, arg);
-    program_flow (prg->vnum, prg->code, ch, vch, 
+    program_flow (argument, prg->is_lua, prg->vnum, prg->code, ch, vch, 
                   (void *) obj1, obj1 ? ACT_ARG_OBJ : ACT_ARG_UNDEFINED,
-                  (void *) obj2, obj2 ? ACT_ARG_OBJ : ACT_ARG_UNDEFINED);
+                  (void *) obj2, obj2 ? ACT_ARG_OBJ : ACT_ARG_UNDEFINED,
+                  TRIG_CALL, prg->security);
 }
 
 /*

@@ -4899,7 +4899,7 @@ MEDIT (medit_addmprog)
     list->vnum = atoi (num);
     list->trig_type = value;
     list->trig_phrase = str_dup (phrase);
-    list->code = code->code;
+    list->script = code;
     SET_BIT (pMob->mprog_flags, value);
     list->next = pMob->mprogs;
     pMob->mprogs = list;

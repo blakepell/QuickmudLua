@@ -9,6 +9,7 @@
 #include "interp.h"
 
 void sorted_ctable_init( lua_State *LS );
+void lua_unregister_desc(DESCRIPTOR_DATA *d);
 
 lua_State *g_mud_LS = NULL;  /* Lua state for entire MUD */
 bool       g_LuaScriptInProgress=FALSE;
@@ -758,8 +759,9 @@ static int L_wizhelp( lua_State *LS )
 
     return 0;
 }
-     
-DEF_DO_FUN(do_luaquery)
+#endif
+
+void do_luaquery( CHAR_DATA *ch, char *argument)
 {
     lua_getglobal( g_mud_LS, "do_luaquery");
     push_CH(g_mud_LS, ch);
@@ -771,7 +773,7 @@ DEF_DO_FUN(do_luaquery)
         lua_pop( g_mud_LS, 1);
     }
 }    
-
+#if 0
 DEF_DO_FUN(do_wizhelp)
 {
     lua_pushcfunction(g_mud_LS, L_wizhelp);
@@ -1591,7 +1593,7 @@ const char *buf_string(BUFFER *buffer)
     return rtn;
 }
 /* end string buffer section*/
-
+#endif
 void lua_con_handler( DESCRIPTOR_DATA *d, const char *argument )
 {
     lua_getglobal( g_mud_LS, "lua_con_handler" );
@@ -1605,7 +1607,7 @@ void lua_con_handler( DESCRIPTOR_DATA *d, const char *argument )
     }
 
 }
-
+#if 0
 static int L_DO_FUN_caller( lua_State *LS )
 {
     DO_FUN *fun=lua_touserdata( LS, 1 );

@@ -578,7 +578,7 @@ MPROG_LIST *new_mprog (void)
 
     mp->vnum = 0;
     mp->trig_type = 0;
-    mp->code = str_dup ("");
+    mp->script = NULL;
     VALIDATE (mp);
     return mp;
 }

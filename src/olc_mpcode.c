@@ -187,6 +187,7 @@ MPEDIT (mpedit_create)
     }
 
     pMcode = new_mpcode ();
+    pMcode->is_lua = TRUE;
     pMcode->vnum = value;
     pMcode->next = mprog_list;
     mprog_list = pMcode;

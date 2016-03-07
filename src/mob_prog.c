@@ -44,6 +44,7 @@
 #include "merc.h"
 #include "tables.h"
 #include "lookup.h"
+#include "lua_scripting.h"
 
 extern int flag_lookup (const char *word, const struct flag_type *flag_table);
 
@@ -936,11 +937,16 @@ void expand_arg (char *buf,
 #define END_BLOCK        -2        /* Flag: End of if-else-endif block */
 #define MAX_CALL_LEVEL    5        /* Maximum nested calls */
 
-void program_flow (sh_int pvnum,    /* For diagnostic purposes */
+void program_flow (
+                   const char *text,
+                   bool is_lua,
+                   sh_int pvnum,    /* For diagnostic purposes */
                    char *source,    /* the actual MOBprog code */
                    CHAR_DATA * mob, CHAR_DATA * ch, 
                    const void *arg1, sh_int arg1type,
-                   const void *arg2, sh_int arg2type)
+                   const void *arg2, sh_int arg2type,
+                   int trig_type,
+                   int security)
 {
     CHAR_DATA *rch = NULL;
     char *code, *line;
@@ -953,7 +959,7 @@ void program_flow (sh_int pvnum,    /* For diagnostic purposes */
     int state[MAX_NESTED_LEVEL],    /* Block state (BEGIN,IN,END) */
       cond[MAX_NESTED_LEVEL];    /* Boolean value based on the last if-check */
 
-    sh_int mvnum = mob->pIndexData->vnum;
+    sh_int mvnum = (mob->pIndexData ? mob->pIndexData->vnum : 0);
 
     if (++call_level > MAX_CALL_LEVEL)
     {
@@ -961,6 +967,13 @@ void program_flow (sh_int pvnum,    /* For diagnostic purposes */
              mob->pIndexData->vnum);
         return;
     }
+
+    if (is_lua)
+    {
+        lua_mob_program(text, pvnum, source, mob, ch, arg1, arg1type, arg2, arg2type, trig_type, security);
+        --call_level;
+        return;
+    } 
 
     /*
      * Reset "stack"
@@ -1196,9 +1209,10 @@ void mp_act_trigger (
         if (prg->trig_type == type
             && strstr (argument, prg->trig_phrase) != NULL)
         {
-            program_flow (prg->vnum, prg->code, mob, ch, 
+            program_flow (argument, prg->script->is_lua, prg->vnum, prg->script->code, mob, ch, 
                    arg1, arg1_type,
-                   arg2, arg2_type);
+                   arg2, arg2_type,
+                   type, prg->script->security);
             break;
         }
     }
@@ -1221,7 +1235,7 @@ bool mp_percent_trigger (CHAR_DATA * mob, CHAR_DATA * ch,
         if (prg->trig_type == type
             && number_percent () < atoi (prg->trig_phrase))
         {
-            program_flow (prg->vnum, prg->code, mob, ch, arg1, arg1_type, arg2, arg2_type);
+            program_flow (NULL, prg->script->is_lua, prg->vnum, prg->script->code, mob, ch, arg1, arg1_type, arg2, arg2_type, type, prg->script->security);
             return (TRUE);
         }
     }
@@ -1241,9 +1255,12 @@ void mp_bribe_trigger (CHAR_DATA * mob, CHAR_DATA * ch, int amount)
     {
         if (prg->trig_type == TRIG_BRIBE && amount >= atoi (prg->trig_phrase))
         {
-            program_flow (prg->vnum, prg->code, mob, ch, 
+            char buf[MSL];
+            sprintf(buf, "%d", amount);
+            program_flow (buf, prg->script->is_lua, prg->vnum, prg->script->code, mob, ch, 
                     NULL, ACT_ARG_UNDEFINED,
-                    NULL, ACT_ARG_UNDEFINED);
+                    NULL, ACT_ARG_UNDEFINED,
+                    TRIG_BRIBE, prg->script->security);
             break;
         }
     }
@@ -1273,18 +1290,22 @@ bool mp_exit_trigger (CHAR_DATA * ch, int dir)
                     && mob->position == mob->pIndexData->default_pos
                     && can_see (mob, ch))
                 {
-                    program_flow (prg->vnum, prg->code, mob, ch, 
+                    program_flow (dir_name[dir], prg->script->is_lua,
+                            prg->vnum, prg->script->code, mob, ch, 
                             NULL, ACT_ARG_UNDEFINED, 
-                            NULL, ACT_ARG_UNDEFINED);
+                            NULL, ACT_ARG_UNDEFINED,
+                            TRIG_EXIT, prg->script->security);
                     return TRUE;
                 }
                 else
                     if (prg->trig_type == TRIG_EXALL
                         && dir == atoi (prg->trig_phrase))
                 {
-                    program_flow (prg->vnum, prg->code, mob, ch, 
+                    program_flow (dir_name[dir], prg->script->is_lua,
+                            prg->vnum, prg->script->code, mob, ch, 
                             NULL, ACT_ARG_UNDEFINED, 
-                            NULL, ACT_ARG_UNDEFINED);
+                            NULL, ACT_ARG_UNDEFINED,
+                            TRIG_EXALL, prg->script->security);
                     return TRUE;
                 }
             }
@@ -1310,9 +1331,11 @@ void mp_give_trigger (CHAR_DATA * mob, CHAR_DATA * ch, OBJ_DATA * obj)
             {
                 if (obj->pIndexData->vnum == atoi (p))
                 {
-                    program_flow (prg->vnum, prg->code, mob, ch, 
+                    program_flow (obj->name, prg->script->is_lua, 
+                            prg->vnum, prg->script->code, mob, ch, 
                             (void *) obj, ACT_ARG_OBJ,
-                            NULL, ACT_ARG_UNDEFINED);
+                            NULL, ACT_ARG_UNDEFINED,
+                            TRIG_GIVE, prg->script->security);
                     return;
                 }
             }
@@ -1327,9 +1350,11 @@ void mp_give_trigger (CHAR_DATA * mob, CHAR_DATA * ch, OBJ_DATA * obj)
 
                     if (is_name (buf, obj->name) || !str_cmp ("all", buf))
                     {
-                        program_flow (prg->vnum, prg->code, mob, ch,
-                                      (void *) obj, ACT_ARG_OBJ,
-                                      NULL, ACT_ARG_UNDEFINED);
+                        program_flow (obj->name, prg->script->is_lua, 
+                                prg->vnum, prg->script->code, mob, ch,
+                                (void *) obj, ACT_ARG_OBJ,
+                                NULL, ACT_ARG_UNDEFINED,
+                                TRIG_GIVE, prg->script->security);
                         return;
                     }
                 }
@@ -1377,9 +1402,13 @@ void mp_hprct_trigger (CHAR_DATA * mob, CHAR_DATA * ch)
         if ((prg->trig_type == TRIG_HPCNT)
             && ((100 * mob->hit / mob->max_hit) < atoi (prg->trig_phrase)))
         {
-            program_flow (prg->vnum, prg->code, mob, ch, 
+            char buf[MSL];
+            sprintf(buf, "%d", (100 * mob->hit / mob->max_hit));
+            program_flow (buf, prg->script->is_lua,
+                    prg->vnum, prg->script->code, mob, ch, 
                     NULL, ACT_ARG_UNDEFINED,
-                    NULL, ACT_ARG_UNDEFINED);
+                    NULL, ACT_ARG_UNDEFINED,
+                    TRIG_HPCNT, prg->script->security);
             break;
         }
 }

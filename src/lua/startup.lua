@@ -2,6 +2,9 @@ package.path = mud.luadir() .. "?.lua"
 
 glob_tprintstr=require "tprint"
 
+require "commands"
+glob_util=require "utilities"
+
 envtbl={} -- game object script environments
 interptbl={} -- key is game object pointer, table of desc=desc pointer, name=char name
 delaytbl={} -- used on the C side mostly
@@ -447,5 +450,31 @@ function colorize( text )
     end
 
     return table.concat(rtn)
+
+end
+
+function start_con_handler( d, fun, ... )
+    forceset(d, "constate", "lua_handler")
+    forceset(d, "conhandler", coroutine.create( fun ) )
+
+    lua_con_handler( d, unpack(arg) )
+end
+
+function lua_con_handler( d, ...)
+    if not forceget(d,"conhandler") then
+        error("No conhandler for "..d.character.name)
+    end
+
+    local res,err=coroutine.resume(forceget(d,"conhandler"), unpack(arg))
+    if res == false then
+        forceset( d, "conhandler", nil )
+        forceset( d, "constate", "playing" )
+        error(err)
+    end
+
+    if coroutine.status(forceget(d, "conhandler"))=="dead" then
+        forceset( d, "conhandler", nil )
+        forceset( d, "constate", "playing" )
+    end
 
 end

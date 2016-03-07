@@ -36,6 +36,18 @@
 #include "merc.h"
 #include "tables.h"
 
+char *name_lookup(const int bit, const struct flag_type *flag_table)
+{
+    int i;
+
+    for (i=0; flag_table[i].name != NULL; i++)
+    {
+        if (flag_table[i].bit == bit)
+            return flag_table[i].name;
+    }
+    return NULL;
+}
+
 int flag_lookup (const char *name, const struct flag_type *flag_table)
 {
     int flag;
