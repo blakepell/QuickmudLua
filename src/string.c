@@ -75,8 +75,26 @@ void string_append (CHAR_DATA * ch, char **pString)
     {
         *pString = str_dup ("");
     }
-    send_to_char (numlines (*pString), ch);
 
+    MPROG_CODE *mpc;
+
+    switch(ch->desc->editor)
+    {
+        case ED_MPCODE:
+            EDIT_MPCODE(ch, mpc);
+            if (mpc->is_lua)
+            {
+                dump_prog( ch, *pString, TRUE);
+            }
+            else
+            {
+                send_to_char (numlines (*pString), ch);
+            }
+            break;
+        default:
+            send_to_char (numlines (*pString), ch);
+
+    }
 /* numlines sends the string with \n\r */
 /*  if ( *(*pString + strlen( *pString ) - 1) != '\r' )
     send_to_char( "\n\r", ch ); */
@@ -151,7 +169,19 @@ void string_add (CHAR_DATA * ch, char *argument)
         if (!str_cmp (arg1, ".s"))
         {
             send_to_char ("String so far:\n\r", ch);
-            send_to_char (numlines (*ch->desc->pString), ch);
+            MPROG_CODE *mpc;
+            switch(ch->desc->editor)
+            {
+                case ED_MPCODE:
+                    EDIT_MPCODE(ch, mpc);
+                    if (mpc->is_lua)
+                        dump_prog(ch, *ch->desc->pString, TRUE);
+                    else
+                        send_to_char (numlines (*ch->desc->pString), ch);
+                    break;
+                default:
+                    send_to_char (numlines (*ch->desc->pString), ch);
+            }
             return;
         }
 
