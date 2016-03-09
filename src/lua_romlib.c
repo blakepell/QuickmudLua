@@ -692,6 +692,32 @@ static int glob_getrandomroom ( lua_State *LS)
 
 }
 
+static int glob_arguments ( lua_State *LS)
+{
+    char *argument=(char *)check_string( LS, 1, MIL );
+    char buf[MIL];
+    bool keepcase=FALSE;
+
+    if (!lua_isnone(LS,2))
+    {
+        keepcase=lua_toboolean(LS, 2);
+    }
+
+    lua_newtable( LS );
+    int index=1;
+
+    while ( argument[0] != '\0' )
+    {
+        if (keepcase)
+            argument=one_argument_keep_case( argument, buf);
+        else
+            argument = one_argument( argument, buf );
+        lua_pushstring( LS, buf );
+        lua_rawseti( LS, -2, index++ );
+    }
+
+    return 1;
+}
         
 #define ENDGTABLE { NULL, NULL, NULL, 0, 0 }
 #define GFUN( fun, sec ) { NULL, #fun , glob_ ## fun , sec, STS_ACTIVE }
@@ -712,6 +738,7 @@ GLOB_TYPE glob_table[] =
     GFUN(getrandomroom, 0),
     GFUN(sendtochar,    0),
     GFUN(pagetochar,    0),
+    GFUN(arguments,     0),
     GFUN(log,           0),
     GFUN(getcharlist,   9),
     GFUN(getobjlist,    9),

@@ -2615,6 +2615,7 @@ bool    is_number    args( ( char *arg ) );
 int    number_argument    args( ( char *argument, char *arg ) );
 int    mult_argument    args( ( char *argument, char *arg) );
 char *    one_argument    args( ( char *argument, char *arg_first ) );
+char *    one_argument_keep_case args( ( char *argument, char *arg_first ) );
 
 /* magic.c */
 int    find_spell    args( ( CHAR_DATA *ch, const char *name) );

@@ -286,7 +286,9 @@ const struct cmd_type cmd_table[] = {
      * Immortal commands.
      */
     {"luai",        do_luai,    POS_DEAD, ML, LOG_NORMAL, 1},
+    {"luahelp",     do_luahelp, POS_DEAD, ML, LOG_NORMAL, 1},
     {"luaquery",    do_luaquery, POS_DEAD,ML, LOG_NORMAL, 1},
+    {"luareset",    do_luareset, POS_DEAD,ML, LOG_NORMAL, 1},
     {"advance",		do_advance,	POS_DEAD, ML, LOG_ALWAYS, 1},
     {"copyover",	do_copyover,	POS_DEAD, ML, LOG_ALWAYS, 1},
     {"dump",		do_dump,	POS_DEAD, ML, LOG_ALWAYS, 0},
@@ -793,6 +795,40 @@ char *one_argument (char *argument, char *arg_first)
     *arg_first = '\0';
 
     while (isspace (*argument))
+        argument++;
+
+    return argument;
+}
+
+/*
+* Pick off one argument from a string and return the rest.
+* Understands quotes. Doesn't lower case.
+*/
+char * one_argument_keep_case( char *argument, char *arg_first )
+{
+    char cEnd;
+
+    while ( isspace(*argument) )
+        argument++;
+
+    cEnd = ' ';
+    if ( *argument == '\'' || *argument == '"' )
+        cEnd = *argument++;
+
+    while ( *argument != '\0' )
+    {
+        if ( *argument == cEnd )
+        {
+            argument++;
+            break;
+        }
+        *arg_first = *argument;
+        arg_first++;
+        argument++;
+    }
+    *arg_first = '\0';
+
+    while ( isspace(*argument) )
         argument++;
 
     return argument;
