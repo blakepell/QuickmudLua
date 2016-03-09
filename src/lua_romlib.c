@@ -2880,91 +2880,6 @@ static int OBJ_setexitflag( lua_State *LS)
     return set_int_flag( LS, "exit_flags", exit_flags, &ud_obj->value[1] );
 }
 
-#if 0
-static int OBJ_loadfunction (lua_State *LS)
-{
-    lua_obj_program( NULL, RUNDELAY_VNUM, NULL,
-                check_OBJ(LS, -2), NULL,
-                NULL, NULL,
-                TRIG_CALL, 0 );
-    return 0;
-}
-
-static int OBJ_savetbl (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, SAVETABLE_FUNCTION);
-
-    /* Push original args into SaveTable */
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_pushstring( LS, ud_obj->pIndexData->area->file_name );
-    lua_call( LS, 3, 0);
-
-    return 0;
-}
-
-static int OBJ_loadtbl (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, LOADTABLE_FUNCTION);
-
-    /* Push original args into LoadTable */
-    lua_pushvalue( LS, 2 );
-    lua_pushstring( LS, ud_obj->pIndexData->area->file_name );
-    lua_call( LS, 2, 1);
-
-    return 1;
-}
-
-static int OBJ_loadscript (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, GETSCRIPT_FUNCTION);
-
-    /* Push original args into GetScript */
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_call( LS, 2, 1);
-
-    /* now run the result as a regular oprog with vnum 0*/
-
-    lua_pushboolean( LS,
-            lua_obj_program( NULL, LOADSCRIPT_VNUM, check_string( LS, -1, MAX_SCRIPT_LENGTH), ud_obj, NULL, NULL, NULL, OTRIG_CALL, 0) );
-
-    return 1;
-
-}
-
-static int OBJ_loadstring (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS,1);
-    lua_pushboolean( LS,
-            lua_obj_program( NULL, LOADSCRIPT_VNUM, check_string( LS, 2, MAX_SCRIPT_LENGTH), ud_obj, NULL, NULL, NULL, OTRIG_CALL, 0) );
-    return 1;
-}
-
-static int OBJ_loadprog (lua_State *LS)
-{
-    OBJ_DATA *ud_obj=check_OBJ(LS, 1);
-    int num = (int)luaL_checknumber (LS, 2);
-    PROG_CODE *pOcode;
-
-    if ( (pOcode = get_oprog_index(num)) == NULL )
-    {
-        luaL_error(LS, "loadprog: oprog vnum %d doesn't exist", num);
-        return 0;
-    }
-
-    lua_pushboolean( LS,
-            lua_obj_program( NULL, num, pOcode->code, ud_obj, NULL, NULL, NULL, OTRIG_CALL, 0) );
-
-    return 1;
-}
-#endif
 static int OBJ_destroy( lua_State *LS)
 {
     OBJ_DATA *ud_obj = check_OBJ(LS, 1);
@@ -3500,13 +3415,7 @@ static const LUA_PROP_TYPE OBJ_method_table [] =
     OBJMETH(destroy, 1),
     OBJMETH(clone, 1),
     OBJMETH(echo, 1),
-    //OBJMETH(loadprog, 1),
-    //OBJMETH(loadscript, 1),
-    //OBJMETH(loadstring, 1),
-    //OBJMETH(loadfunction, 1),
     OBJMETH(oload, 1),
-    //OBJMETH(savetbl, 1),
-    //OBJMETH(loadtbl, 1),
     OBJMETH(tprint, 1),
     
     /* portal only */
@@ -3530,61 +3439,6 @@ static const LUA_PROP_TYPE OBJ_method_table [] =
 /* end OBJ section */
 
 /* AREA section */
-#if 0
-static int AREA_loadfunction( lua_State *LS)
-{
-    lua_area_program( NULL, RUNDELAY_VNUM, NULL,
-                check_AREA(LS, -2), NULL,
-                TRIG_CALL, 0 );
-    return 0;
-}
-
-static int AREA_loadscript (lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, GETSCRIPT_FUNCTION);
-
-    /* Push original args into GetScript */
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_call( LS, 2, 1);
-
-    /* now run the result as a regular aprog with vnum 0*/
-    lua_pushboolean( LS,
-            lua_area_program( NULL, LOADSCRIPT_VNUM, check_string( LS, -1, MAX_SCRIPT_LENGTH), ud_area, NULL, ATRIG_CALL, 0) );
-
-    return 1;
-}
-
-static int AREA_loadstring (lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS,1);
-    lua_pushboolean( LS,
-            lua_area_program( NULL, LOADSCRIPT_VNUM, check_string( LS, 2, MAX_SCRIPT_LENGTH), ud_area, NULL, ATRIG_CALL, 0) );
-    return 1;
-}
-
-static int AREA_loadprog (lua_State *LS)
-{
-    AREA_DATA *ud_area=check_AREA(LS, 1);
-    int num = (int)luaL_checknumber (LS, 2);
-    PROG_CODE *pAcode;
-
-    if ( (pAcode = get_aprog_index(num)) == NULL )
-    {
-        luaL_error(LS, "loadprog: aprog vnum %d doesn't exist", num);
-        return 0;
-    }
-
-    lua_pushboolean( LS,
-            lua_area_program( NULL, num, pAcode->code, ud_area, NULL, ATRIG_CALL, 0) );
-
-    return 1;
-}
-
-#endif
-
 static int AREA_flag( lua_State *LS)
 {
     AREA_DATA *ud_area = check_AREA(LS, 1);
@@ -3811,26 +3665,12 @@ static const LUA_PROP_TYPE AREA_method_table [] =
 {
     AREAMETH(flag, 0),
     AREAMETH(reset, 5),
-    //AREAMETH(loadprog, 1),
-    //AREAMETH(loadscript, 1),
-    //AREAMETH(loadstring, 1),
-    //AREAMETH(loadfunction, 1),
     ENDPTABLE
 }; 
 
 /* end AREA section */
 
 /* ROOM section */
-/*
-static int ROOM_loadfunction ( lua_State *LS)
-{
-    lua_room_program( NULL, RUNDELAY_VNUM, NULL,
-                check_ROOM(LS, -2), NULL,
-                NULL, NULL, NULL, NULL,
-                TRIG_CALL, 0 );
-    return 0;
-}*/
-
 static int ROOM_mload (lua_State *LS)
 {
     ROOM_INDEX_DATA * ud_room = check_ROOM (LS, 1);
@@ -3916,79 +3756,6 @@ static int ROOM_tprint ( lua_State *LS)
 
     return 0;
 }
-#if 0
-static int ROOM_savetbl (lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, SAVETABLE_FUNCTION);
-
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_pushstring( LS, ud_room->area->file_name );
-    lua_call( LS, 3, 0);
-
-    return 0;
-}
-
-static int ROOM_loadtbl (lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, LOADTABLE_FUNCTION);
-
-    lua_pushvalue( LS, 2 );
-    lua_pushstring( LS, ud_room->area->file_name );
-    lua_call( LS, 2, 1);
-
-    return 1;
-}
-
-static int ROOM_loadscript (lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, GETSCRIPT_FUNCTION);
-
-    /* Push original args into GetScript */
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_call( LS, 2, 1);
-
-    lua_pushboolean( LS,
-            lua_room_program( NULL, LOADSCRIPT_VNUM, check_string( LS, -1, MAX_SCRIPT_LENGTH),
-                ud_room, NULL, NULL, NULL, NULL, NULL, RTRIG_CALL, 0) );
-    return 1;
-}
-
-static int ROOM_loadstring (lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
-    lua_pushboolean( LS,
-            lua_room_program( NULL, LOADSCRIPT_VNUM, check_string(LS, 2, MAX_SCRIPT_LENGTH),
-                ud_room, NULL, NULL, NULL, NULL, NULL, RTRIG_CALL, 0) );
-    return 1;
-}
-
-static int ROOM_loadprog (lua_State *LS)
-{
-    ROOM_INDEX_DATA *ud_room=check_ROOM(LS,1);
-    int num = (int)luaL_checknumber (LS, 2);
-    PROG_CODE *pRcode;
-
-    if ( (pRcode = get_rprog_index(num)) == NULL )
-    {
-        luaL_error(LS, "loadprog: rprog vnum %d doesn't exist", num);
-        return 0;
-    }
-
-    lua_pushboolean( LS,
-            lua_room_program( NULL, num, pRcode->code,
-                ud_room, NULL, NULL, NULL, NULL, NULL,
-                RTRIG_CALL, 0) );
-    return 1;
-}
-#endif
 
 static int ROOM_get_name (lua_State *LS)
 {
@@ -4190,13 +3957,7 @@ static const LUA_PROP_TYPE ROOM_method_table [] =
     ROOMMETH(oload, 1),
     ROOMMETH(mload, 1),
     ROOMMETH(echo, 1),
-    //ROOMMETH(loadprog, 1),
-    //ROOMMETH(loadscript, 1),
-    //ROOMMETH(loadstring, 1),
-    //ROOMMETH(loadfunction, 1),
     ROOMMETH(tprint, 1),
-    //ROOMMETH(savetbl, 1),
-    //ROOMMETH(loadtbl, 1),
     ENDPTABLE
 }; 
 
@@ -4636,45 +4397,45 @@ static int MOBPROTO_resist (lua_State *LS)
     return check_long_flag( LS, "resist", res_flags, ud_mobp->res_flags );
 }
 
-#define MPGETSTR( field, val, hsumm, hinfo ) static int MOBPROTO_get_ ## field (lua_State *LS)\
+#define MPGETSTR( field, val) static int MOBPROTO_get_ ## field (lua_State *LS)\
 {\
     MOB_INDEX_DATA *ud_mobp=check_MOBPROTO(LS,1);\
     lua_pushstring(LS, val );\
     return 1;\
 }
 
-#define MPGETINT( field, val, hsumm, hinfo ) static int MOBPROTO_get_ ## field (lua_State *LS)\
+#define MPGETINT( field, val) static int MOBPROTO_get_ ## field (lua_State *LS)\
 {\
     MOB_INDEX_DATA *ud_mobp=check_MOBPROTO(LS,1);\
     lua_pushinteger(LS, val );\
     return 1;\
 }
 
-#define MPGETBOOL( field, val, hsumm, hinfo ) static int MOBPROTO_get_ ## field (lua_State *LS)\
+#define MPGETBOOL( field, val) static int MOBPROTO_get_ ## field (lua_State *LS)\
 {\
     MOB_INDEX_DATA *ud_mobp=check_MOBPROTO(LS,1);\
     lua_pushboolean(LS, val );\
     return 1;\
 }
 
-MPGETINT( vnum, ud_mobp->vnum ,"" ,"" );
-MPGETSTR( name, ud_mobp->player_name , "" ,"");
-MPGETSTR( shortdescr, ud_mobp->short_descr,"" ,"");
-MPGETSTR( longdescr, ud_mobp->long_descr,"" ,"");
-MPGETSTR( description, ud_mobp->description, "", "");
-MPGETINT( alignment, ud_mobp->alignment,"" ,"");
-MPGETINT( level, ud_mobp->level,"" ,"");
-MPGETSTR( damtype, attack_table[ud_mobp->dam_type].name,"" ,"");
-MPGETSTR( startpos, flag_bit_name(position_flags, ud_mobp->start_pos),"" ,"");
-MPGETSTR( defaultpos, flag_bit_name(position_flags, ud_mobp->default_pos),"" ,"");
+MPGETINT( vnum, ud_mobp->vnum);
+MPGETSTR( name, ud_mobp->player_name);
+MPGETSTR( shortdescr, ud_mobp->short_descr);
+MPGETSTR( longdescr, ud_mobp->long_descr);
+MPGETSTR( description, ud_mobp->description);
+MPGETINT( alignment, ud_mobp->alignment);
+MPGETINT( level, ud_mobp->level);
+MPGETSTR( damtype, attack_table[ud_mobp->dam_type].name);
+MPGETSTR( startpos, flag_bit_name(position_flags, ud_mobp->start_pos));
+MPGETSTR( defaultpos, flag_bit_name(position_flags, ud_mobp->default_pos));
 MPGETSTR( sex,
     ud_mobp->sex == SEX_NEUTRAL ? "neutral" :
     ud_mobp->sex == SEX_MALE    ? "male" :
     ud_mobp->sex == SEX_FEMALE  ? "female" :
-    NULL,"" ,"");
-MPGETSTR( race, race_table[ud_mobp->race].name,"" ,"");
-MPGETSTR( size, flag_bit_name(size_flags, ud_mobp->size),"" ,"");
-MPGETINT( count, ud_mobp->count, "", "");
+    NULL);
+MPGETSTR( race, race_table[ud_mobp->race].name);
+MPGETSTR( size, flag_bit_name(size_flags, ud_mobp->size));
+MPGETINT( count, ud_mobp->count);
 
 static int MOBPROTO_get_area (lua_State *LS)
 {

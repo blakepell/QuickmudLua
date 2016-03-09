@@ -235,30 +235,6 @@ function mob_program_setup(ud, f)
   return f
 end
 
-function obj_program_setup(ud, f)
-  if envtbl[ud]==nil then
-    envtbl[ud]=new_script_env(ud, "obj", OBJ_env_meta)
-  end
-  setfenv(f, envtbl[ud])
-  return f
-end
-
-function area_program_setup(ud, f)
-  if envtbl[ud]==nil then
-    envtbl[ud]=new_script_env(ud, "area", AREA_env_meta)
-  end
-  setfenv(f, envtbl[ud])
-  return f
-end
-
-function room_program_setup(ud, f)
-  if envtbl[ud]==nil then
-    envtbl[ud]=new_script_env(ud, "room", ROOM_env_meta)
-  end
-  setfenv(f, envtbl[ud])
-  return f
-end
-
 function interp_setup( ud, typ, desc, name)
   if interptbl[ud] then
     return 0, interptbl[ud].name
@@ -267,12 +243,6 @@ function interp_setup( ud, typ, desc, name)
   if envtbl[ud]== nil then
     if typ=="mob" then
       envtbl[ud]=new_script_env(ud,"mob", CH_env_meta)
-    elseif typ=="obj" then
-      envtbl[ud]=new_script_env(ud,"obj", OBJ_env_meta)
-    elseif typ=="area" then
-      envtbl[ud]=new_script_env(ud,"area", AREA_env_meta)
-    elseif typ=="room" then
-      envtbl[ud]=new_script_env(ud,"room", ROOM_env_meta)
     else
       error("Invalid type in interp_setup: "..typ)
     end
