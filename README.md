@@ -9,10 +9,55 @@ Mprogs
 
 ## New commands ##
 **luai**
+
 Enter interactive Lua shell.
+```
+luai
+
+Entered lua interpreter mode for CH Vodur
+Use @ on a blank line to exit.
+Use do and end to create multiline chunks.
+Use 'mob' or 'self' to access target's self.
+lua> mob:say("Hi")
+You say 'Hi'
+lua> 
+```
+
+
 
 **luahelp**
+
 Show information on the game's Lua API.
+
+```
+SECTIONS: 
+
+global
+CH
+OBJ
+AREA
+ROOM
+EXIT
+RESET
+OBJPROTO
+MOBPROTO
+SHOP
+AFFECT
+MPROG
+MTRIG
+HELP
+DESCRIPTOR
+Syntax: 
+    luahelp <section>
+    luahelp <section> <get|set|meth>
+    luahelp dump <section> -- Dump for pasting to dokuwiki
+
+Examples:
+    luahelp ch
+    luahelp global
+    luahelp objproto meth
+```
+
 
 **luaquery**
 
@@ -60,8 +105,6 @@ Limit (optional):
     bottom results are printed.
 
 Notes: 
-[Hit Return to continue]
-
     'x' can be used optionally to qualify fields and methods. See examples.
 
     A field must be in the selection in order to be used in sort.
@@ -86,9 +129,46 @@ Examples:
     luaq * from reset where command=="M" and arg1==10256
     Show default selection for all resets of mob vnum 10256.
 
+```
 
+```
+luaq * from objproto where name:find("blue") order by level
+
+Query: * from objproto where name:find("blue") order by level
+|vnum  |lev|shortdescr                     |
+|2370  |25 |a pair of blue steel greaves   |
+|2369  |25 |a blue steel helm and visor    |
+|2371  |25 |a pair of blue steel vambraces |
+|7204  |17 |an neon blue potion            |
+|924   |17 |a blue robe                    |
+|1366  |11 |a blue potion                  |
+|6309  |10 |a blue potion                  |
+|5110  |9  |a silvery blue wand            |
+|1363  |8  |a scroll written on blue paper |
+|5231  |5  |a scarlet and blue stone       |
+|5232  |5  |an incandescent blue stone     |
+|5230  |5  |a pale blue stone              |
+|10439 |4  |a figurine of a blue dragon    |
+|9570  |1  |a glowing blue vial            |
+|10422 |0  |the blueprint                  |
+|3014  |0  |a blueberry danish             |
+|9567  |0  |a glass of blue oasis          |
+|9574  |0  |a dark blue potion             |
+|1616  |0  |a dark blue cloak              |
+Results 1 through 19 (of 19).
 
 ```
 
 
+
 **luareset**
+
+Reload specific Lua files.
+
+```
+Syntax:
+    luareset <file>
+
+Valid args:
+commands
+```
