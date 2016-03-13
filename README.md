@@ -3,8 +3,112 @@
 This project is an effort create a QuickMUD variant with support for Lua scripting.
 The Lua implementation is based on implementation on Aarchon MUD.
 
-## Lua progs ##
-Mprogs 
+## Lua mprogs ##
+Now mprogs can be Lua scripts. The same 'mpedit' command is used to create and edit Lua mprogs. The mprog editor also conveniently has Lua syntax highlighting support for Lua scripts.
+
+### Lua script errors ###
+Turn on 'wiznet luaerror' to see script error details when they occur. 
+
+### Security ###
+Each Lua script has a security value setting. This determines which API functionality this script can call. The security levels for API members can be seen using the 'luahelp' command. If a script tries to access an API member with a security level higher than the script, an error will occur:
+
+    :::text
+    LUA mprog error for priest cleric(3719), mprog 3700:
+     [string "return function (ch,obj1,obj2,trigger,text1..."]:1: Current security 1. Function requires 9.
+    stack traceback:
+            [C]: in function 'getarealist'
+            [string "return function (ch,obj1,obj2,trigger,text1..."]:1: in function <[string "return function (ch,obj1,obj2,trigger,text1..."]:1>
+
+### Script environments ###
+When a Lua mprog runs, it runs in a script environment tied to the mob that the mprog is attached to. This script environment represents the global scope for any mprog that the mob will run. This means any global values that are assigned during a script will persist and be accessible by other scripts that the same mob instance may run.
+
+Consider this prog:
+```
+#!lua
+if not count then
+  count = 1
+else
+  count = count + 1
+end
+say("Count: "..count)
+```
+'count' is treated as a global variable here and so will persist in this mob's script environment. If we assign this script to a GRALL trigger, then we will see the mob say a higher number each time somebody enters the room.
+
+### Script Arguments ###
+When an mprog runs, certain arguments are passed into the Lua script that is run. These arguments are:
+
+* ch
+* obj1
+* obj2
+* trigger 
+* text1
+* text2
+* victim
+* trigtype
+
+'trigtype' is always the type of trigger that has caused the script to run ('grall' for instance). The other arguments will have different meaning depending on what type of trigger has caused the script to run.
+
+The global variables 'mob' and 'self' are also accessible to the script, which both reference to the mob that is running the script.
+
+### Accessing the game API ###
+The 'mob'/'self' variable points to a CH type object. CH has certain properties and methods that can be accessed from a script (as long as the security is sufficient). A list of properties and methods for CH can be seen with 'luahelp CH'.
+
+Reading a property value is as simple as indexing the CH with the property name:
+```
+#!lua
+-- Both notations do the exact same thing
+say(mob.hp)
+say(mob['hp'])
+```
+
+Some properties are settable. Setting a property value is as simple as assigning a value:
+```
+#!lua
+-- Both notations do the exact same thing
+mob.hp = 100
+mob['hp'] = 100
+```
+
+Methods are typically invoked using the ':' operator. **However**, through some special magic, methods of the mob that are running the script do not have to be qualified with a CH reference.
+```
+#!lua
+-- These all do the exact same thing
+mob:say("Hello!")
+self:say("Hello!")
+say("Hello!")
+
+-- But if want to use methods on any other CH type object besides the mob running the script, 
+-- we will always have to specify the actual object
+a_new_mob = mob.room:mload(700)
+a_new_mob:say("I'm a new mob")
+```
+
+A list of global functions and be seen with 'luahlep global'. These can be called directly from scripts as long as the security is sufficient.
+
+Examples:
+```
+#!lua
+-- Load mob 700 in 100 random rooms
+for i=1,100 do
+  local room = getrandomroom()
+  local new_mob = room:mload(700)
+  new_mob:say("Here I am!")
+end
+```
+```
+#!lua
+-- Find all instances of mob 700 and make them dance
+for _,mobby in pairs(getmobworld(700)) do
+  mobby:mdo("dance")
+end
+```
+```
+#!lua
+-- Send a fun message to all players
+for _,player in pairs(getplayerlist()) do
+  sendtochar(player, "What if hippos lived in Antarctica?\r\n")
+end
+```
 
 
 ## New commands ##
@@ -29,35 +133,33 @@ lua>
 
 Show information on the game's Lua API.
 
-```
-SECTIONS: 
+    :::text
+    SECTIONS: 
 
-global
-CH
-OBJ
-AREA
-ROOM
-EXIT
-RESET
-OBJPROTO
-MOBPROTO
-SHOP
-AFFECT
-MPROG
-MTRIG
-HELP
-DESCRIPTOR
-Syntax: 
-    luahelp <section>
-    luahelp <section> <get|set|meth>
-    luahelp dump <section> -- Dump for pasting to dokuwiki
+    global
+    CH
+    OBJ
+    AREA
+    ROOM
+    EXIT
+    RESET
+    OBJPROTO
+    MOBPROTO
+    SHOP
+    AFFECT
+    MPROG
+    MTRIG
+    HELP
+    DESCRIPTOR
+    Syntax: 
+        luahelp <section>
+        luahelp <section> <get|set|meth>
+        luahelp dump <section> -- Dump for pasting to dokuwiki
 
-Examples:
-    luahelp ch
-    luahelp global
-    luahelp objproto meth
-```
-
+    Examples:
+        luahelp ch
+        luahelp global
+        luahelp objproto meth
 
 **luaquery**
 
