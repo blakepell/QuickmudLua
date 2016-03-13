@@ -1,0 +1,91 @@
+#AREADATA
+Name Lua Testing~
+Builders None~
+VNUMs 700 799
+Credits Vodur~
+Security 1
+End
+
+
+
+#MOBILES
+#700
+lua test 1~
+lua test 1~
+Lua test 1
+~
+~
+human~
+AB 0 0 0
+100 0 0d0+0 0d0+0 0d0+0 none
+0 0 0 0
+0 0 0 0
+stand stand none 0
+0 0 medium unknown
+F for AHMV
+F par ABCDEFGHIJK
+M GRALL 700 100~
+#0
+
+
+
+#OBJECTS
+#0
+
+
+
+#ROOMS
+#700
+~
+~
+0 0 0
+D1
+~
+~
+0 0 701
+S
+#701
+~
+~
+0 0 0
+D3
+~
+~
+0 0 700
+S
+#0
+
+
+
+#SPECIALS
+S
+
+
+
+#RESETS
+M 0 700 1 700 1 Load lua test 1
+S
+
+
+
+#SHOPS
+0
+
+
+
+#MOBPROGS
+#700
+LUA 1
+SEC 9
+CODE if not count then
+  count = 1
+else
+  count = count + 1
+end
+say("Count: "..count)
+say(trigtype)
+~
+End
+#0
+
+#$
