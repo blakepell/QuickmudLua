@@ -6,12 +6,13 @@
 #include <lauxlib.h>
 
 #include "merc.h"
+#include "tables.h" 
 #include "lua_scripting.h"
 #include "lua_romlib.h"
 #include "lua_main.h"
 
 #define MOB_ARG "mob"
-#define NUM_MPROG_ARGS 7 
+#define NUM_MPROG_ARGS 8
 #define CH_ARG "ch"
 #define OBJ1_ARG "obj1"
 #define OBJ2_ARG "obj2"
@@ -19,8 +20,9 @@
 #define TEXT1_ARG "text1"
 #define TEXT2_ARG "text2"
 #define VICTIM_ARG "victim"
+#define TRIGTYPE_ARG "trigtype"
 
-
+const char *flag_bit_name( const struct flag_type flag_table[], int bit);
 
 static void script_error(char *fmt, ...)
 {
@@ -45,11 +47,11 @@ bool lua_load_mprog( lua_State *LS, int vnum, const char *code)
         return FALSE;
     }
 
-    sprintf(buf, "return function (%s,%s,%s,%s,%s,%s,%s)"
+    sprintf(buf, "return function (%s,%s,%s,%s,%s,%s,%s,%s)"
             "%s\n"
             "end",
             CH_ARG, OBJ1_ARG, OBJ2_ARG, TRIG_ARG,
-            TEXT1_ARG, TEXT2_ARG, VICTIM_ARG,
+            TEXT1_ARG, TEXT2_ARG, VICTIM_ARG, TRIGTYPE_ARG,
             code);
 
 
@@ -141,6 +143,8 @@ void lua_mob_program( const char *text, int pvnum, const char *source,
                 && push_CH( g_mud_LS, (CHAR_DATA*)arg2)) )
         lua_pushnil(g_mud_LS);
 
+    /* TRIGTYPE_ARG */
+    lua_pushstring ( g_mud_LS, flag_bit_name(mprog_flags, trig_type) );
 
     /* some snazzy stuff to prevent crashes and other bad things*/
     bool nest=g_LuaScriptInProgress;

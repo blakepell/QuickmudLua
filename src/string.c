@@ -25,6 +25,7 @@
 #include "merc.h"
 #include "tables.h"
 #include "olc.h"
+#include "lua_main.h"
 #include "lua_scripting.h"
 
 char *string_linedel (char *, int);
