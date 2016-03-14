@@ -1,7 +1,7 @@
 package.path = mud.luadir() .. "?.lua"
 
 glob_tprintstr=require "tprint"
-
+require "serialize"
 require "commands"
 glob_util=require "utilities"
 
@@ -448,4 +448,34 @@ function lua_con_handler( d, ...)
     forceset( d, "constate", "playing" )
   end
 
+end
+
+function SaveTable( name, tbl, areaFname )
+  if string.find(name, "[^a-zA-Z0-9_]") then
+    error("Invalid character in name.")
+  end
+
+  local dir=string.match(areaFname, "(%w+)\.are")
+  if not os.rename(dir, dir) then
+    os.execute("mkdir '" .. dir .. "'")
+  end
+  local f=io.open( dir .. "/" .. name .. ".lua", "w")
+  out,saved=serialize.save(name,tbl)
+  f:write(out)
+
+  f:close()
+end
+
+function LoadTable(name, areaFname)
+  if string.find(name, "[^a-zA-Z0-9_]") then
+    error("Invalid character in name.")
+  end
+
+  local dir=string.match(areaFname, "(%w+)\.are")
+  local f=loadfile( dir .. "/"  .. name .. ".lua")
+  if f==nil then
+    return nil
+  end
+
+  return f()
 end

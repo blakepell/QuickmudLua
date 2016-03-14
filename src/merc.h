@@ -2694,6 +2694,7 @@ char *    string_unpad    args( ( char * argument ) );
 char *    string_proper    args( ( char * argument ) );
 
 /* olc.c */
+bool    run_olc_argument  args( ( CHAR_DATA *ch, int editor, char *argument) );
 bool    run_olc_editor    args( ( DESCRIPTOR_DATA *d ) );
 char    *olc_ed_name    args( ( CHAR_DATA *ch ) );
 char    *olc_ed_vnum    args( ( CHAR_DATA *ch ) );
