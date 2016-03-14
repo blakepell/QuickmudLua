@@ -1,15 +1,16 @@
-# README #
-
 This project is an effort create a QuickMUD variant with support for Lua scripting.
-The Lua implementation is based on implementation on Aarchon MUD.
+The Lua interface is based on the implementation on Aarchon MUD.
 
-## Lua mprogs ##
+# Infrastructure changes
+Most core game objects are now allocated through Lua instead of malloc.
+
+# Lua mprogs #
 Now mprogs can be Lua scripts. The same 'mpedit' command is used to create and edit Lua mprogs. The mprog editor also conveniently has Lua syntax highlighting support for Lua scripts.
 
-### Lua script errors ###
+## Lua script errors ##
 Turn on 'wiznet luaerror' to see script error details when they occur. 
 
-### Security ###
+## Security ##
 Each Lua script has a security value setting. This determines which API functionality this script can call. The security levels for API members can be seen using the 'luahelp' command. If a script tries to access an API member with a security level higher than the script, an error will occur:
 
     :::text
@@ -19,7 +20,7 @@ Each Lua script has a security value setting. This determines which API function
             [C]: in function 'getarealist'
             [string "return function (ch,obj1,obj2,trigger,text1..."]:1: in function <[string "return function (ch,obj1,obj2,trigger,text1..."]:1>
 
-### Script environments ###
+## Script environments ##
 When a Lua mprog runs, it runs in a script environment tied to the mob that the mprog is attached to. This script environment represents the global scope for any mprog that the mob will run. This means any global values that are assigned during a script will persist and be accessible by other scripts that the same mob instance may run.
 
 Consider this prog:
@@ -34,7 +35,7 @@ say("Count: "..count)
 ```
 'count' is treated as a global variable here and so will persist in this mob's script environment. If we assign this script to a GRALL trigger, then we will see the mob say a higher number each time somebody enters the room.
 
-### Script Arguments ###
+## Script Arguments ##
 When an mprog runs, certain arguments are passed into the Lua script that is run. These arguments are:
 
 * ch
@@ -50,7 +51,7 @@ When an mprog runs, certain arguments are passed into the Lua script that is run
 
 The global variables 'mob' and 'self' are also accessible to the script, which both reference to the mob that is running the script.
 
-### Accessing the game API ###
+## Accessing the game API ##
 The 'mob'/'self' variable points to a CH type object. CH has certain properties and methods that can be accessed from a script (as long as the security is sufficient). A list of properties and methods for CH can be seen with 'luahelp CH'.
 
 Reading a property value is as simple as indexing the CH with the property name:
@@ -69,7 +70,7 @@ mob.hp = 100
 mob['hp'] = 100
 ```
 
-Methods are typically invoked using the ':' operator. **However**, through some special magic, methods of the mob that are running the script do not have to be qualified with a CH reference.
+Methods are invoked using the ':' operator. However, through some special magic, methods of the mob that are running the script do not have to be qualified with a CH reference.
 ```
 #!lua
 -- These all do the exact same thing
@@ -83,7 +84,7 @@ a_new_mob = mob.room:mload(700)
 a_new_mob:say("I'm a new mob")
 ```
 
-A list of global functions and be seen with 'luahlep global'. These can be called directly from scripts as long as the security is sufficient.
+A list of global functions and be seen with 'luahelp global'. These can be called directly from scripts as long as the security is sufficient.
 
 Examples:
 ```
@@ -111,7 +112,7 @@ end
 ```
 
 
-## New commands ##
+# New commands #
 **luai**
 
 Enter interactive Lua shell.
@@ -164,7 +165,7 @@ Show information on the game's Lua API.
 **luaquery**
 
 ```
-luaquery [selection] from [type] <where [filter]> <order by [sort]> <width [width]> <limit [limit]>
+luaquery <selection> from <type> [where <filter>] [order by <sort>] [width <width>] [limit <limit>]
     Execute a query and show results.
 
 Types:
