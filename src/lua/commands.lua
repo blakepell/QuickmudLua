@@ -45,7 +45,7 @@ end
 local function luaquery_usage( ch )
   pagetochar( ch,
 [[
-{Cluaquery [selection] from [type] <where [filter]> <order by [sort]> <width [width]> <limit [limit]>
+{Cluaquery <selection> from <type> [where <filter>] [order by <sort>] [width <width>] [limit <limit>]
     {xExecute a query and show results.
 
 Types:
@@ -667,34 +667,6 @@ function do_luaquery( ch, argument)
 
 end
 -- end luaquery section
-
--- scriptdump section
-local function scriptdumpusage( ch )
-  sendtochar(ch, [[
-scriptdump <userdir> <scriptname> [true|false]
-
-Third argument (true/false) prints line numbers if true. Defaults to true
-if not provided.
-                   
-Example: scriptdump vodur testscript false 
-]])
-end
-
-
-function do_scriptdump( ch, argument )
-  args=arguments(argument, true)
-  if #args < 2 or #args > 3  then
-    scriptdumpusage(ch)
-    return
-  end
-
-  if not(args[3]=="false") then
-    pagetochar( ch, linenumber(colorize(GetScript( args[1], args[2] ), ch)).."\n\r", true )
-  else
-    pagetochar( ch, colorize(GetScript( args[1], args[2] )).."\n\r", true )
-  end
-end
--- end scriptdump section
 
 -- luahelp section
 local luatypes=getluatype() -- list of type names

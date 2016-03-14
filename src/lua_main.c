@@ -103,35 +103,36 @@ static void infinite_loop_check_hook( lua_State *LS, lua_Debug *ar)
     }
 }
 
-#if 0
 void stackDump (lua_State *LS) {
     int i;
     int top = lua_gettop(LS);
+    char buf[MSL];
     for (i = 1; i <= top; i++) {  /* repeat for each level */
         int t = lua_type(LS, i);
         switch (t) {
 
             case LUA_TSTRING:  /* strings */
-                logpf("`%s'", lua_tostring(LS, i));
+                sprintf(buf, "`%s'", lua_tostring(LS, i));
+                log_string(buf);
                 break;
 
             case LUA_TBOOLEAN:  /* booleans */
-                logpf(lua_toboolean(LS, i) ? "true" : "false");
+                log_string(lua_toboolean(LS, i) ? "true" : "false");
                 break;
 
             case LUA_TNUMBER:  /* numbers */
-                logpf("%g", lua_tonumber(LS, i));
+                sprintf(buf, "%g", lua_tonumber(LS, i));
+                log_string(buf);
                 break;
 
             default:  /* other values */
-                logpf("%s", lua_typename(LS, t));
+                log_string(lua_typename(LS, t));
                 break;
 
         }
     }
-    logpf("\n");  /* end the listing */
+    log_string("\n");  /* end the listing */
 }
-#endif
 
 const char *check_string( lua_State *LS, int index, size_t size)
 {
@@ -359,82 +360,10 @@ void do_luai( CHAR_DATA *ch, char *argument)
     void *victim=NULL;
     LUA_OBJ_TYPE *type;
 
-    //if ( arg1[0]== '\0' )
-    {
-        victim=(void *)ch;
-        type=&CH_type;
-        name=ch->name;
-    }
-#if 0
-    else if (!strcmp( arg1, "mob") )
-    {
-        CHAR_DATA *mob;
-        mob=get_char_room( ch, argument );
-        if (!mob)
-        {
-            ptc(ch, "Could not find %s in the room.\n\r", argument);
-            return;
-        }
-        else if (!IS_NPC(mob))
-        {
-            ptc(ch, "Not on PCs.\n\r");
-            return;
-        }
-
-        victim = (void *)mob;
-        type= &CH_type;
-        name=mob->name;
-    }
-    else if (!strcmp( arg1, "obj") )
-    {
-        OBJ_DATA *obj=NULL;
-        obj=get_obj_here( ch, argument);
-
-        if (!obj)
-        {
-            ptc(ch, "Could not find %s in room or inventory.\n\r", argument);
-            return;
-        }
-
-        victim= (void *)obj;
-        type=&OBJ_type;
-        name=obj->name;
-    }
-    else if (!strcmp( arg1, "area") )
-    {
-        if (!ch->in_room)
-        {
-            bugf("do_luai: %s in_room is NULL.", ch->name);
-            return;
-        }
-
-        victim= (void *)(ch->in_room->area);
-        type=&AREA_type;
-        name=ch->in_room->area->name;
-    }
-    else if (!strcmp( arg1, "room") )
-    {
-        if (!ch->in_room)
-        {
-            bugf("do_luai: %s in_room is NULL.", ch->name);
-            return;
-        }
-        
-        victim= (void *)(ch->in_room);
-        type=&ROOM_type;
-        name=ch->in_room->name;
-    }
-    else
-    {
-        ptc(ch, "luai [no argument] -- open interpreter in your own env\n\r"
-                "luai mob <target>  -- open interpreter in env of target mob (in same room)\n\r"
-                "luai obj <target>  -- open interpreter in env of target obj (inventory or same room)\n\r"
-                "luai area          -- open interpreter in env of current area\n\r"
-                "luai room          -- open interpreter in env of current room\n\r"); 
-        return;
-    }
-#endif
-
+    victim=(void *)ch;
+    type=&CH_type;
+    name=ch->name;
+    
     if (!ch->desc)
     {
         bugf("do_luai: %s has null desc", ch->name);
@@ -451,29 +380,7 @@ void do_luai( CHAR_DATA *ch, char *argument)
         return;
     }
 
-    if ( type == &CH_type )
-    {
-        lua_pushliteral( g_mud_LS, "mob"); 
-    }
-    else if ( type == &OBJ_type )
-    {
-        lua_pushliteral( g_mud_LS, "obj"); 
-    }
-    else if ( type == &AREA_type )
-    {
-        lua_pushliteral( g_mud_LS, "area"); 
-    }
-    else if ( type == &ROOM_type )
-    {
-        lua_pushliteral( g_mud_LS, "room"); 
-    }
-    else
-    {
-            bugf("do_luai: invalid type: %s", type->type_name);
-            lua_settop(g_mud_LS, 0);
-            return;
-    }
-
+    lua_pushliteral( g_mud_LS, "mob"); 
     lua_pushlightuserdata(g_mud_LS, ch->desc);
     lua_pushstring( g_mud_LS, ch->name );
 
@@ -562,22 +469,6 @@ void open_lua ()
 
 }  /* end of open_lua */
 
-#if 0
-DEF_DO_FUN(do_scriptdump)
-{
-    lua_getglobal(g_mud_LS, "do_scriptdump");
-    push_CH(g_mud_LS, ch);
-    lua_pushstring(g_mud_LS, argument);
-    if (CallLuaWithTraceBack( g_mud_LS, 2, 0) )
-    {
-        ptc (ch, "Error with do_scriptdump:\n %s\n\r",
-                lua_tostring(g_mud_LS, -1));
-        lua_pop( g_mud_LS, 1);
-    }
-
-}
-#endif
-
 void do_luaquery( CHAR_DATA *ch, char *argument)
 {
     lua_getglobal( g_mud_LS, "do_luaquery");
@@ -649,7 +540,6 @@ void do_luareset(CHAR_DATA *ch, char *argument)
         lua_pop( g_mud_LS, 1);
     }
 }
-#if 0
 
 void check_lua_stack()
 {
@@ -660,8 +550,6 @@ void check_lua_stack()
         lua_settop( g_mud_LS, 0);
     }
 }
-
-#endif
 
 void do_luahelp(CHAR_DATA *ch, char *argument)
 {

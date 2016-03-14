@@ -2705,6 +2705,7 @@ int    liq_lookup    args( ( const char *name) );
 
 /* lua_main.c */
 void lua_con_handler( DESCRIPTOR_DATA *d, const char *argument );
+void check_lua_stack();
 
 #undef    CD
 #undef    MID

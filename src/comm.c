@@ -739,6 +739,8 @@ void game_loop_unix (int control)
     /* Main loop */
     while (!merc_down)
     {
+        check_lua_stack();
+
         fd_set in_set;
         fd_set out_set;
         fd_set exc_set;
