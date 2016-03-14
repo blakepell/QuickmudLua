@@ -1,4 +1,4 @@
-This project is an effort create a QuickMUD variant with support for Lua scripting.
+The QuickMUD + Lua project is an effort create a QuickMUD variant with support for Lua scripting.
 The Lua interface is based on the implementation on Aarchon MUD.
 
 # Credits/License #
