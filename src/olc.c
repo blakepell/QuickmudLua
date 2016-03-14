@@ -33,33 +33,38 @@
 AREA_DATA *get_area_data args ((int vnum));
 
 
-/* Executed from comm.c.  Minimizes compiling when changes are made. */
-bool run_olc_editor (DESCRIPTOR_DATA * d)
+bool run_olc_argument( CHAR_DATA *ch, int editor, char *argument)
 {
-    switch (d->editor)
+    switch (editor)
     {
         case ED_AREA:
-            aedit (d->character, d->incomm);
+            aedit (ch, argument);
             break;
         case ED_ROOM:
-            redit (d->character, d->incomm);
+            redit (ch, argument);
             break;
         case ED_OBJECT:
-            oedit (d->character, d->incomm);
+            oedit (ch, argument);
             break;
         case ED_MOBILE:
-            medit (d->character, d->incomm);
+            medit (ch, argument);
             break;
         case ED_MPCODE:
-            mpedit (d->character, d->incomm);
+            mpedit (ch, argument);
             break;
         case ED_HELP:
-            hedit (d->character, d->incomm);
+            hedit (ch, argument);
             break;
         default:
             return FALSE;
     }
     return TRUE;
+}
+
+/* Executed from comm.c.  Minimizes compiling when changes are made. */
+bool run_olc_editor (DESCRIPTOR_DATA * d)
+{
+    return run_olc_argument( d->character, d->editor, d->incomm);
 }
 
 

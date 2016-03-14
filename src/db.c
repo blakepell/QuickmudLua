@@ -3301,33 +3301,25 @@ void do_areas (CHAR_DATA * ch, char *argument)
 
 void do_memory (CHAR_DATA * ch, char *argument)
 {
-    char buf[MAX_STRING_LENGTH];
-
-    sprintf (buf, "Affects %5d\n\r", top_affect);
-    send_to_char (buf, ch);
-    sprintf (buf, "Areas   %5d\n\r", top_area);
-    send_to_char (buf, ch);
-    sprintf (buf, "ExDes   %5d\n\r", top_ed);
-    send_to_char (buf, ch);
-    sprintf (buf, "Exits   %5d\n\r", top_exit);
-    send_to_char (buf, ch);
-    sprintf (buf, "Helps   %5d\n\r", top_help);
-    send_to_char (buf, ch);
-    sprintf (buf, "Socials %5d\n\r", social_count);
-    send_to_char (buf, ch);
-    sprintf (buf, "Mobs    %5d(%d new format)\n\r", top_mob_index, newmobs);
-    send_to_char (buf, ch);
-    sprintf (buf, "(in use)%5d\n\r", mobile_count);
-    send_to_char (buf, ch);
-    sprintf (buf, "Objs    %5d(%d new format)\n\r", top_obj_index, newobjs);
-    send_to_char (buf, ch);
-    sprintf (buf, "Resets  %5d\n\r", top_reset);
-    send_to_char (buf, ch);
-    sprintf (buf, "Rooms   %5d\n\r", top_room);
-    send_to_char (buf, ch);
-    sprintf (buf, "Shops   %5d\n\r", top_shop);
-    send_to_char (buf, ch);
-
+    char buf[MSL];
+    ptc( ch, "          %-5s %s\n\r", "C", "Lua" );
+    ptc( ch, "Affects   %5d %5d\n\r", top_affect, count_AFFECT());
+    ptc( ch, "Areas     %5d %5d\n\r", top_area, count_AREA());
+    ptc( ch, "ExDes     %5d\n\r", top_ed        );
+    ptc( ch, "Exits     %5d %5d\n\r", top_exit, count_EXIT());
+    ptc( ch, "Helps     %5d %5d\n\r", top_help, count_HELP());
+    ptc( ch, "Socials   %5d\n\r", social_count);
+    ptc( ch, "Resets    %5d %5d\n\r", top_reset, count_RESET());
+    ptc( ch, "Rooms     %5d %5d\n\r", top_room, count_ROOM());
+    ptc( ch, "Shops     %5d %5d\n\r", top_shop, count_SHOP());
+    ptc( ch, "\n\r");
+    ptc( ch, "Mobs      %5d %5d\n\r", top_mob_index, count_MOBPROTO());
+    ptc( ch, " (in use) %5d\n\r", mobile_count  );
+    ptc( ch, "Objs      %5d %5d\n\r", top_obj_index, count_OBJPROTO());
+    ptc( ch, "\n\r");
+    ptc( ch, "Mprogs    %5d\n\r", top_mprog_index);
+    ptc( ch, " (lua)    %5d\n\r", count_MPROG());
+    ptc( ch, "\n\r");
     sprintf (buf, "Strings %5d strings of %7d bytes (max %d).\n\r",
              nAllocString, sAllocString, MAX_STRING);
     send_to_char (buf, ch);
