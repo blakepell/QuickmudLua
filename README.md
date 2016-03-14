@@ -1,7 +1,19 @@
 This project is an effort create a QuickMUD variant with support for Lua scripting.
 The Lua interface is based on the implementation on Aarchon MUD.
 
-# Infrastructure changes
+# Credits/License #
+See other README files and docs folders for QuickMUD, Rom, Merc, Diku credits and license details.
+
+The Lua interface code in this project is based primarily on the implementation by Vodur at Aarchon MUD, which implementation is partially based on Nick Gammon's code for embedding Lua in SMAUG codebase (see http://www.gammon.com.au/files/smaug/lua/, http://gammon.com.au/forum/?id=8000).
+
+The QuickMUD + Lua project doesn't impose any additional license restrictions to those inherited from QuickMUD, Rom, Merc, and Diku.
+
+# Disclaimers
+
+* This code is not guaranteed to work cross platform and has only been tested thoroughly on Linux.
+
+
+# Infrastructure changes #
 Most core game objects are now allocated through Lua instead of malloc.
 
 # Lua mprogs #
@@ -110,6 +122,9 @@ for _,player in pairs(getplayerlist()) do
   sendtochar(player, "What if hippos lived in Antarctica?\r\n")
 end
 ```
+
+## Inifinite loop protection ##
+Scripts are prevented from going into infinite loops by limiting execution to a maximum of 1000000 instructions per script.
 
 
 # New commands #
