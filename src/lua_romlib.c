@@ -6,6 +6,7 @@
 #include "merc.h"
 #include "lua_romlib.h"
 #include "lua_main.h"
+#include "lua_scripting.h"
 #include "olc.h"
 #include "tables.h"
 #include "mob_cmds.h"
@@ -1261,48 +1262,6 @@ static int CH_randchar (lua_State *LS)
 
 }
 
-/* analog of run_olc_editor in olc.c */
-/*
-static bool run_olc_editor_lua( CHAR_DATA *ch, const char *argument )
-{
-    if (IS_NPC(ch))
-        return FALSE;
-
-    switch ( ch->desc->editor )
-    {
-        case ED_AREA:
-            aedit( ch, argument );
-            break;
-        case ED_ROOM:
-            redit( ch, argument );
-            break;
-        case ED_OBJECT:
-            oedit( ch, argument );
-            break;
-        case ED_MOBILE:
-            medit( ch, argument );
-            break;
-        case ED_MPCODE:
-            mpedit( ch, argument );
-            break;
-        case ED_OPCODE:
-            opedit( ch, argument );
-            break;
-        case ED_APCODE:
-            apedit( ch, argument );
-            break;
-        case ED_RPCODE:
-            rpedit( ch, argument );
-            break;
-        case ED_HELP:
-            hedit( ch, argument );
-            break;
-        default:
-            return FALSE;
-    }
-    return TRUE; 
-}
-
 static int CH_olc (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS, 1);
@@ -1311,12 +1270,13 @@ static int CH_olc (lua_State *LS)
         luaL_error( LS, "NPCs cannot use OLC!");
     }
 
-    if (!run_olc_editor_lua( ud_ch, check_fstring( LS, 2, MIL)) )
+    if (!run_olc_argument( ud_ch, ud_ch->desc->editor,
+                (char *)check_fstring( LS, 2, MIL)) )
         luaL_error(LS, "Not currently in olc edit mode.");
 
     return 0;
 }
-*/
+
 static int CH_tprint ( lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS, 1);
@@ -1331,7 +1291,7 @@ static int CH_tprint ( lua_State *LS)
 
     return 0;
 }
-#if 0
+
 static int CH_savetbl (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
@@ -1370,24 +1330,7 @@ static int CH_loadtbl (lua_State *LS)
 
     return 1;
 }
-
-static int CH_loadscript (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-
-    lua_getfield( LS, LUA_GLOBALSINDEX, GETSCRIPT_FUNCTION);
-
-    /* Push original args into GetScript */
-    lua_pushvalue( LS, 2 );
-    lua_pushvalue( LS, 3 );
-    lua_call( LS, 2, 1);
-
-    /* now run the result as a regular mprog with vnum 0*/
-    lua_mob_program( NULL, LOADSCRIPT_VNUM, check_string(LS, -1, MAX_SCRIPT_LENGTH), ud_ch, NULL, NULL, 0, NULL, 0, TRIG_CALL, 0 );
-
-    return 0;
-}
-
+#if 0
 static int CH_loadfunction ( lua_State *LS )
 {
     lua_mob_program( NULL, RUNDELAY_VNUM, NULL,
@@ -1403,12 +1346,13 @@ static int CH_loadstring (lua_State *LS)
     lua_mob_program( NULL, LOADSCRIPT_VNUM, check_string(LS, 2, MAX_SCRIPT_LENGTH), ud_ch, NULL, NULL, 0, NULL, 0, TRIG_CALL, 0 );
     return 0;
 } 
+#endif
 
 static int CH_loadprog (lua_State *LS)
 {
     CHAR_DATA *ud_ch=check_CH(LS,1);
     int num = (int)luaL_checknumber (LS, 2);
-    PROG_CODE *pMcode;
+    MPROG_CODE *pMcode;
 
     if ( (pMcode = get_mprog_index(num)) == NULL )
     {
@@ -1426,8 +1370,6 @@ static int CH_loadprog (lua_State *LS)
 
     return 0;
 }
-
-#endif
 
 #define mpmethod( meth ) \
 static int CH_ ## meth (lua_State *LS) \
@@ -1728,156 +1670,6 @@ static int CH_say (lua_State *LS)
     do_say( ud_ch, (char *)check_fstring( LS, 2, MIL) );
     return 0;
 }
-
-#if 0
-static int CH_addaffect (lua_State *LS)
-{
-    int arg_index=1;
-    CHAR_DATA * ud_ch = check_CH (LS, arg_index++);
-    AFFECT_DATA af;
-    const char *temp = NULL;
-    const struct flag_type *flag_table;
-
-    /* where */
-    temp=check_string(LS,arg_index++,MIL);
-    af.where=flag_lookup( temp, apply_types);
-
-    if (af.where==NO_FLAG)
-        luaL_error(LS, "No such 'apply_type' flag: %s", temp); 
-    else if (af.where != TO_AFFECTS &&
-             af.where != TO_IMMUNE &&
-             af.where != TO_RESIST &&
-             af.where != TO_VULN /* &&
-             af.where != TO_SPECIAL*/ /* not supported yet */
-            )
-        luaL_error(LS, "%s not supported for CH affects.", temp);
-
-    /* type */
-    temp=check_string(LS,arg_index++,MIL);
-    af.type=skill_lookup( temp );
-
-    if (af.type == -1)
-        luaL_error(LS, "Invalid skill: %s", temp);
-
-    /* level */
-    af.level=luaL_checkinteger(LS,arg_index++);
-    if (af.level<1)
-        luaL_error(LS, "Level must be > 0.");
-
-    /* duration */
-    af.duration=luaL_checkinteger(LS,arg_index++);
-    if (af.duration<-1)
-        luaL_error(LS, "Duration must be -1 (indefinite) or greater.");
-
-    /* location */
-    switch (af.where)
-    {
-        case TO_IMMUNE:
-        case TO_RESIST:
-        case TO_VULN:
-            af.location=APPLY_NONE;
-            break;
-        case TO_AFFECTS:
-        {
-            temp=check_string(LS,arg_index++,MIL);
-            af.location=flag_lookup( temp, apply_flags );
-            if (af.location == NO_FLAG)
-                luaL_error(LS, "Invalid location: %s", temp);
-            break;
-        }
-        default:
-            luaL_error(LS, "Invalid where.");
-      
-    }
-
-    /* modifier */
-    switch (af.where)
-    {
-        case TO_IMMUNE:
-        case TO_RESIST:
-        case TO_VULN:
-            af.modifier=0;
-            break;
-        case TO_AFFECTS:
-            af.modifier=luaL_checkinteger(LS,arg_index++);
-            break;
-        default:
-            luaL_error(LS, "Invalid where.");
-    }
-
-    /* bitvector */
-    temp=check_string(LS,arg_index++,MIL);
-    if (!strcmp(temp, "none"))
-    {
-        af.bitvector=0;
-    }
-    else
-    {
-        switch (af.where)
-        {
-            case TO_AFFECTS:
-                flag_table=affect_flags;
-                break;
-            case TO_IMMUNE:
-                flag_table=imm_flags;
-                break;
-            case TO_RESIST:
-                flag_table=res_flags;
-                break;
-            case TO_VULN:
-                flag_table=vuln_flags;
-                break;
-            default:
-                return luaL_error(LS, "'where' not supported");
-        }
-        af.bitvector=flag_lookup( temp, flag_table);
-        if (af.bitvector==NO_FLAG)
-            luaL_error(LS, "Invalid bitvector: %s", temp);
-        else if ( !flag_table[index_lookup(af.bitvector, flag_table)].settable )
-            luaL_error(LS, "Flag '%s' is not settable.", temp);
-    }
-
-    /* tag (custom_affect only) */
-    if (af.type==gsn_custom_affect)
-    {
-        af.tag=str_dup(check_string(LS,arg_index++,MIL));
-    }
-    else
-        af.tag=NULL;
-    
-    affect_to_char_tagsafe( ud_ch, &af );
-
-    return 0;
-}
-
-static int CH_removeaffect (lua_State *LS)
-{
-    CHAR_DATA *ud_ch=check_CH(LS,1);
-    
-    if (is_AFFECT(LS,2))
-    {
-        /* remove a specific affect */
-        affect_remove( ud_ch, check_AFFECT(LS,2));
-        return 0;
-    }
-
-    /* remove by sn */
-    const char *skill = check_string(LS, 2, MIL);
-    int sn=skill_lookup( skill );
-    if (sn==-1)
-       luaL_error(LS, "Invalid skill: %s", skill);
-    else if (sn==gsn_custom_affect)
-    {
-        custom_affect_strip( ud_ch, check_string(LS,3,MIL) );
-    }
-    else
-    {
-        affect_strip( ud_ch, sn );
-    }
-
-    return 0;
-} 
-#endif
 
 static int CH_destroy (lua_State *LS)
 {
@@ -2834,16 +2626,11 @@ static const LUA_PROP_TYPE CH_method_table [] =
     CHMETH(setimmune, 1),
     CHMETH(setresist, 1),
     CHMETH(randchar, 0),
-    //CHMETH(loadprog, 1),
-    //CHMETH(loadscript, 1),
-    //CHMETH(loadstring, 1),
-    //CHMETH(loadfunction, 1),
-    //CHMETH(savetbl, 1),
-    //CHMETH(loadtbl, 1),
+    CHMETH(loadprog, 1),
+    CHMETH(savetbl, 1),
+    CHMETH(loadtbl, 1),
     CHMETH(tprint, 1),
-    //CHMETH(olc, 1),
-    //CHMETH(addaffect, 9),
-    //CHMETH(removeaffect,9),
+    CHMETH(olc, 1),
     ENDPTABLE
 }; 
 
